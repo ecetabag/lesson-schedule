@@ -30,7 +30,7 @@ function options_(duration,excludeId){
  const current=rows_().filter(b=>b.id!==excludeId), now=new Date(),cal=calendar_(),windows=windows_(),slots=[];
  if(new Set(windows.map(w=>w.id)).size!==windows.length)throw Error('Duplicate Slot IDs found.');
  windows.forEach(w=>{
-  if(w.status!=='OPEN'||w.legacy||!/^\\d{4}-\\d{2}-\\d{2}$/.test(w.date)||!/^\\d\\d:\\d\\d$/.test(w.start)||!/^\\d\\d:\\d\\d$/.test(w.end))return;
+  if(w.status!=='OPEN'||w.legacy||!/^\d{4}-\d{2}-\d{2}$/.test(w.date)||!/^\d\d:\d\d$/.test(w.start)||!/^\d\d:\d\d$/.test(w.end))return;
   const low=min_(w.start),high=min_(w.end);if(high<=low||high>1440)return;
   const busy=current.filter(x=>x.window===w.id&&x.date===w.date).map(x=>({a:min_(x.start),b:min_(x.end)})).sort((x,y)=>x.a-y.a);
   if(busy.some((x,i)=>i&&x.a!==busy[i-1].b))return;
@@ -47,22 +47,22 @@ function options_(duration,excludeId){
 }
 function getEventId_(id){return (rows_().find(x=>x.id===id)||{}).event}
 function listAvailableSlots(duration){duration=duration_(duration);return{slots:options_(duration,null),timezone:Session.getScriptTimeZone(),lessonMinutes:duration}}
-function safe_(s){s=String(s||'').trim();return /^[=+@\\-\\t\\r]/.test(s)?"'"+s:s}
+function safe_(s){s=String(s||'').trim();return /^[=+@\-\t\r]/.test(s)?"'"+s:s}
 function bookLesson(f){
  const duration=duration_(f.duration),id=String(f.slotId||''),kid=String(f.kidName||'').trim(),email=String(f.email||'').trim().toLowerCase(),phone=String(f.phone||'').trim();
- if(kid.length<2||kid.length>100||!/^\\S+@\\S+\\.\\S+$/.test(email)||!/^[+\\d\\s().-]{7,24}$/.test(phone))throw Error('Complete the parent contact details and child name.');
+ if(kid.length<2||kid.length>100||!/^\S+@\S+\.\S+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw Error('Complete the parent contact details and child name.');
  const lock=LockService.getScriptLock();if(!lock.tryLock(20000))throw Error('System busy; retry.');
  try{
   const slot=options_(duration,null).find(s=>s.id===id);if(!slot)throw Error('That lesson time is no longer available.');
   const bookingId=Utilities.getUuid(),cal=calendar_(),start=date_(slot.date,slot.start),end=date_(slot.date,slot.end);
-  const event=cal.createEvent('Waterpolo Lesson — '+kid,start,end,{guests:email,sendInvites:true,location:slot.location,description:'Child: '+kid+'\\nPhone: '+phone+'\\nBooking ID: '+bookingId});
+  const event=cal.createEvent('Waterpolo Lesson — '+kid,start,end,{guests:email,sendInvites:true,location:slot.location,description:'Child: '+kid+'\nPhone: '+phone+'\nBooking ID: '+bookingId});
   try{sheet_('Bookings').appendRow([bookingId,new Date(),slot.windowId,slot.date,slot.start,slot.end,safe_(kid),safe_(email),safe_(phone),safe_(slot.location),event.getId(),'CONFIRMED',new Date(),duration]);SpreadsheetApp.flush()}
   catch(e){try{event.deleteEvent()}catch(_){}throw Error('Could not save booking. Contact instructor before retrying.')}
   return{bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,timezone:Session.getScriptTimeZone(),email};
  }finally{lock.releaseLock()}
 }
-function norm_(phone,kid){let p=String(phone||'').replace(/\\D/g,''),k=String(kid||'').trim().replace(/\\s+/g,' ').toLowerCase();if(p.length<7||p.length>15||k.length<2)throw Error('Enter phone and child name.');return {phone:p,kid:k}}
-function matching_(ident){return rows_().filter(r=>r.phone.replace(/\\D/g,'')===ident.phone&&r.kid.trim().replace(/\\s+/g,' ').toLowerCase()===ident.kid)}
+function norm_(phone,kid){let p=String(phone||'').replace(/\D/g,''),k=String(kid||'').trim().replace(/\s+/g,' ').toLowerCase();if(p.length<7||p.length>15||k.length<2)throw Error('Enter phone and child name.');return {phone:p,kid:k}}
+function matching_(ident){return rows_().filter(r=>r.phone.replace(/\D/g,'')===ident.phone&&r.kid.trim().replace(/\s+/g,' ').toLowerCase()===ident.kid)}
 function hash_(s){return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,s))}
 function requestManageCode(f){
  const ident=norm_(f.phone,f.kidName), matches=matching_(ident);
