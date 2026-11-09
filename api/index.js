@@ -7,6 +7,7 @@ const ORIGIN = process.env.SITE_ORIGIN || 'https://ecetabag.github.io';
 const ALLOWED_ORIGINS = new Set([ORIGIN, ...(process.env.ADDITIONAL_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)]);
 const DURATIONS = new Set([30, 60]);
 const BOOKINGS = "'Bookings'!A2:N";
+const isSameOrigin = (origin,req) => { try { const u=new URL(origin);return u.protocol==='https:' && u.host===req.headers.host; }catch{return false;} };
 const WINDOWS = "'Slots'!A2:G";
 
 const fail = (status, message) => Object.assign(new Error(message), { status });
@@ -206,9 +207,9 @@ async function reschedule(token,data){
 
 export default async function handler(req,res){
  const origin=String(req.headers.origin||'');
- if(origin && ALLOWED_ORIGINS.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');}
+ if(origin && (ALLOWED_ORIGINS.has(origin)||isSameOrigin(origin,req))){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');}
  if(req.method==='OPTIONS')return res.statusCode=204,res.end();
- if(origin && !ALLOWED_ORIGINS.has(origin))return json(res,403,{error:'Origin not allowed.'});
+ if(origin && !ALLOWED_ORIGINS.has(origin) && !isSameOrigin(origin,req))return json(res,403,{error:'Origin not allowed.'});
  try{
   const action=(req.method==='GET'?req.query.action:req.body?.action)||'';
   if(req.method==='GET'&&action==='health')return json(res,200,{ok:true,configured:!!(process.env.GOOGLE_REFRESH_TOKEN&&process.env.UPSTASH_REDIS_REST_TOKEN)});
@@ -217,7 +218,13 @@ export default async function handler(req,res){
   const body=req.body||{};
   let value;
   if(req.method==='GET'&&action==='availability')value={slots:await available(token,durationOf(req.query.duration||30),null),timezone:TZ};
-  else if(req.method==='POST'&&action==='book')value=await booking(token,body);
+  else if(req.method==='POST'&&action==='book'){
+   const client=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0];
+   const rate='wp:booking-rate:'+sha(client).slice(0,32);
+   const [attempts]=await redis([['INCR',rate],['EXPIRE',rate,3600]]);
+   if(Number(attempts)>12)throw fail(429,'Too many booking attempts. Please try again later.');
+   value=await booking(token,body);
+  }
   else if(req.method==='POST'&&action==='requestCode')value=await requestCode(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
   else if(req.method==='POST'&&action==='verifyCode')value=await verifyCode(token,body);
   else if(req.method==='POST'&&action==='manageTimes')value=await rescheduleOptions(token,body);
