@@ -5,7 +5,7 @@ const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 const TZ = process.env.LESSON_TIMEZONE || 'America/Los_Angeles';
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ecetabag.github.io';
 const ALLOWED_ORIGINS = new Set([ORIGIN, ...(process.env.ADDITIONAL_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)]);
-const DURATIONS = new Set([30, 60]);
+const DURATIONS = new Set([60, 90]);
 const BOOKINGS = "'Bookings'!A2:N";
 const isSameOrigin = (origin,req) => { try { const u=new URL(origin);return u.protocol==='https:' && u.host===req.headers.host; }catch{return false;} };
 const WINDOWS = "'Slots'!A2:G";
@@ -21,7 +21,7 @@ const minutes = value => { const [h,m] = String(value).split(':').map(Number); r
 const hhmm = value => [Math.floor(value/60),value%60].map(n => String(n).padStart(2,'0')).join(':');
 const validDay = s => /^\d{4}-\d\d-\d\d$/.test(s) && !Number.isNaN(Date.parse(s+'T12:00:00Z'));
 const validClock = s => /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(s);
-const durationOf = v => { const d=Number(v); if(!DURATIONS.has(d)) throw fail(400,'Choose a 30- or 60-minute lesson.'); return d; };
+const durationOf = v => { const d=Number(v); if(!DURATIONS.has(d)) throw fail(400,'Choose a 60- or 90-minute lesson.'); return d; };
 const compare = (a,b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const json = (res, status, value) => { res.statusCode=status;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(value)); };
 const envCheck = () => {
@@ -91,6 +91,85 @@ async function available(token,duration,excludeId) {
  }
  return result.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
 }
+
+/* Coach login: allowlisted email + 6-digit one-time codes. */
+const coaches = () => new Set(String(process.env.COACH_EMAILS || '').split(',').map(e=>e.trim().toLowerCase()).filter(Boolean));
+const coachCodeKey = email => 'wp:coach:otp:'+sha(email);
+async function coachRequestCode(token,data,ip) {
+ const email=clean(data.email).toLowerCase();
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)throw fail(400,'Enter a valid coach email.');
+ if(!coaches().size)throw fail(503,'Coach login is not configured yet.');
+ const message='If this email is an approved coach, a sign-in code has been sent.';
+ const rate='wp:coach:rate:'+sha(ip+'|'+email);
+ const [count]=await redis([['INCR',rate],['EXPIRE',rate,3600]]);
+ if(Number(count)>5||!coaches().has(email))return {message};
+ const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
+ await redis([['SET',coachCodeKey(email),sha(email+':'+code),'EX',600],['DEL','wp:coach:attempt:'+sha(email)]]);
+ await mail(token,email,'Your Waterpolo coach sign-in code','Your coach sign-in code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this email.');
+ return {message};
+}
+async function coachVerifyCode(data) {
+ const email=clean(data.email).toLowerCase(),code=clean(data.code);
+ if(!coaches().has(email)||!/^\d{6}$/.test(code))throw fail(401,'Invalid or expired code.');
+ const key='wp:coach:attempt:'+sha(email);
+ const [count]=await redis([['INCR',key],['EXPIRE',key,600]]);
+ if(Number(count)>5)throw fail(429,'Too many attempts. Request another code.');
+ const [expected]=await redis([['GET',coachCodeKey(email)]]);
+ if(!expected||!compare(expected,sha(email+':'+code)))throw fail(401,'Invalid or expired code.');
+ const session=id();
+ await redis([['DEL',coachCodeKey(email)],['SET','wp:coach:session:'+sha(session),email,'EX',28800]]);
+ return {token:session,email,expiresIn:28800};
+}
+async function assertCoach(data) {
+ const session=clean(data.token);
+ if(session.length!==48)throw fail(401,'Sign in as a coach first.');
+ const [email]=await redis([['GET','wp:coach:session:'+sha(session)]]);
+ if(!email||!coaches().has(email))throw fail(401,'Your coach session has expired. Sign in again.');
+ return email;
+}
+async function coachAvailability(token,data) {
+ await assertCoach(data);
+ const [windows,bookings]=await Promise.all([readRows(token,WINDOWS),readRows(token,BOOKINGS)]);
+ return {windows:windowsRows(windows).map(w=>({...w,bookingCount:bookingRows(bookings).filter(b=>b.window===w.id).length})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),timezone:TZ};
+}
+async function coachAddWindow(token,data) {
+ await assertCoach(data);
+ const day=clean(data.date),start=clean(data.start),end=clean(data.end),location=clean(data.location)||'Pool';
+ if(!validDay(day)||!validClock(start)||!validClock(end))throw fail(400,'Choose a valid date and time.');
+ if(minutes(end)<=minutes(start)||minutes(end)-minutes(start)<60||minutes(end)-minutes(start)>720)throw fail(400,'Teaching windows must be between 1 and 12 hours.');
+ if(location.length>120)throw fail(400,'Location is too long.');
+ if(instant(day,start).getTime()<=Date.now())throw fail(400,'Choose a future availability window.');
+ if(instant(day,start).getTime()>Date.now()+120*86400000)throw fail(400,'Availability may be added up to 120 days ahead.');
+ return lockDay(day,async()=>{
+  const rows=windowsRows(await readRows(token,WINDOWS));
+  if(rows.some(w=>w.date===day&&minutes(start)<minutes(w.end)&&minutes(end)>minutes(w.start)))throw fail(409,'This teaching window overlaps another open window.');
+  const windowId='WP-'+crypto.randomUUID().slice(0,12).toUpperCase();
+  await sheets(token,'POST',"'Slots'!A:G",{values:[[windowId,day,start,end,safe(location),'OPEN','']]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+  return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0}};
+ });
+}
+async function coachRemoveWindow(token,data) {
+ await assertCoach(data);
+ const windowId=clean(data.windowId);
+ const all=await readRows(token,WINDOWS);
+ const matched=all.find(row=>clean(row[0])===windowId);
+ if(!matched)throw fail(404,'Teaching window not found.');
+ const day=clean(matched[1]);
+ return lockDay(day,async()=>{
+  const updated=await readRows(token,WINDOWS);
+  const index=updated.findIndex(row=>clean(row[0])===windowId && clean(row[5]).toUpperCase()==='OPEN');
+  if(index<0)throw fail(409,'Teaching window is no longer open.');
+  if(bookingRows(await readRows(token,BOOKINGS)).some(b=>b.window===windowId))throw fail(409,'This window has bookings. Keep it open or move the lessons first.');
+  await sheets(token,'PUT',"'Slots'!F"+(index+2),{values:[['CLOSED']]},{valueInputOption:'RAW'});
+  return {success:true};
+ });
+}
+async function coachSignOut(data){
+ const session=clean(data.token);
+ if(session.length===48)await redis([['DEL','wp:coach:session:'+sha(session)]]);
+ return {success:true};
+}
+
 async function redis(commands) {
  const url=process.env.UPSTASH_REDIS_REST_URL.replace(/\/$/,'')+'/pipeline';
  const r=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+process.env.UPSTASH_REDIS_REST_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(commands)});
@@ -234,6 +313,12 @@ export default async function handler(req,res){
   else if(req.method==='POST'&&action==='verifyCode')value=await verifyCode(token,body);
   else if(req.method==='POST'&&action==='manageTimes')value=await rescheduleOptions(token,body);
   else if(req.method==='POST'&&action==='reschedule')value=await reschedule(token,body);
+  else if(req.method==='POST'&&action==='coachRequestCode')value=await coachRequestCode(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
+  else if(req.method==='POST'&&action==='coachVerifyCode')value=await coachVerifyCode(body);
+  else if(req.method==='POST'&&action==='coachAvailability')value=await coachAvailability(token,body);
+  else if(req.method==='POST'&&action==='coachAddWindow')value=await coachAddWindow(token,body);
+  else if(req.method==='POST'&&action==='coachRemoveWindow')value=await coachRemoveWindow(token,body);
+  else if(req.method==='POST'&&action==='coachSignOut')value=await coachSignOut(body);
   else throw fail(404,'Unknown API endpoint.');
   return json(res,200,value);
  }catch(err){const status=err.status||500;console.error('API error',status,err.message);return json(res,status,{error:status===500?'Unexpected server error. Please try again.':err.message});}
