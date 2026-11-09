@@ -193,9 +193,14 @@ async function reschedule(token,data){
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
   await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},location:slot.location},{sendUpdates:'all'});
   try{
-   await sheets(token,'PUT',"'Bookings'!C"+current.row+':F'+current.row,{values:[[slot.windowId,slot.date,slot.start,slot.end]]},{valueInputOption:'RAW'});
-   await sheets(token,'PUT',"'Bookings'!J"+current.row,{values:[[safe(slot.location)]]},{valueInputOption:'RAW'});
-   await sheets(token,'PUT',"'Bookings'!M"+current.row,{values:[[new Date().toISOString()]]},{valueInputOption:'RAW'});
+   await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values:batchUpdate',{
+    valueInputOption:'RAW',
+    data:[
+      {range:"'Bookings'!C"+current.row+':F'+current.row,values:[[slot.windowId,slot.date,slot.start,slot.end]]},
+      {range:"'Bookings'!J"+current.row,values:[[safe(slot.location)]]},
+      {range:"'Bookings'!M"+current.row,values:[[new Date().toISOString()]]}
+    ]
+   });
   }catch(e){
    await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:before.start,end:before.end,location:before.location},{sendUpdates:'all'}).catch(()=>{});
    throw e;
