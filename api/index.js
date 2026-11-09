@@ -48,7 +48,7 @@ async function google(token,method,path,body,params) {
 const sheets=(token,method,range,body,params) => google(token,method,'spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values/'+encodeURIComponent(range)+(method==='POST'?':append':method==='PUT'?'':'') ,body,params);
 async function readRows(token,range){let v=await sheets(token,'GET',range);return v.values||[];}
 function bookingRows(data){return data.map((a,i)=>({row:i+2,id:a[0]||'',window:a[2]||'',date:a[3]||'',start:a[4]||'',end:a[5]||'',kid:a[6]||'',email:a[7]||'',phone:a[8]||'',location:a[9]||'',event:a[10]||'',status:a[11]||'',duration:Number(a[13]||30)})).filter(b=>b.id&&b.status==='CONFIRMED');}
-function windowsRows(data){return data.map(a=>({id:clean(a[0]),date:clean(a[1]),start:clean(a[2]),end:clean(a[3]),location:clean(a[4])||'Pool',status:clean(a[5]).toUpperCase(),legacy:clean(a[6])})).filter(w=>w.id && w.status==='OPEN' && !w.legacy && validDay(w.date) && validClock(w.start) && validClock(w.end) && minutes(w.end)>minutes(w.start));}
+function windowsRows(data){return data.map(a=>({id:clean(a[0]),date:clean(a[1]),start:clean(a[2]),end:clean(a[3]),location:clean(a[4])||'Pool',status:clean(a[5]).toUpperCase(),legacy:clean(a[6]),coachEmail:clean(a[7]).toLowerCase()})).filter(w=>w.id && w.status==='OPEN' && !w.legacy && validDay(w.date) && validClock(w.start) && validClock(w.end) && minutes(w.end)>minutes(w.start));}
 function offsetFor(day) {
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,timeZoneName:'shortOffset'}).formatToParts(new Date(day+'T12:00:00Z'));
  const part=parts.find(x=>x.type==='timeZoneName')?.value||'GMT';
@@ -129,11 +129,12 @@ async function assertCoach(data) {
 }
 async function coachAvailability(token,data) {
  await assertCoach(data);
- const [windows,bookings]=await Promise.all([readRows(token,WINDOWS),readRows(token,BOOKINGS)]);
- return {windows:windowsRows(windows).map(w=>({...w,bookingCount:bookingRows(bookings).filter(b=>b.window===w.id).length})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),timezone:TZ};
+ const coach=await assertCoach(data);
+ const [windows,bookings]=await Promise.all([readRows(token,"'Slots'!A2:H"),readRows(token,BOOKINGS)]);
+ return {windows:windowsRows(windows).filter(w=>w.coachEmail===coach).map(w=>({...w,bookingCount:bookingRows(bookings).filter(b=>b.window===w.id).length})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),timezone:TZ};
 }
 async function coachAddWindow(token,data) {
- await assertCoach(data);
+ const coach=await assertCoach(data);
  const day=clean(data.date),start=clean(data.start),end=clean(data.end),location=clean(data.location)||'Pool';
  if(!validDay(day)||!validClock(start)||!validClock(end))throw fail(400,'Choose a valid date and time.');
  if(minutes(end)<=minutes(start)||minutes(end)-minutes(start)<60||minutes(end)-minutes(start)>720)throw fail(400,'Teaching windows must be between 1 and 12 hours.');
@@ -144,20 +145,20 @@ async function coachAddWindow(token,data) {
   const rows=windowsRows(await readRows(token,WINDOWS));
   if(rows.some(w=>w.date===day&&minutes(start)<minutes(w.end)&&minutes(end)>minutes(w.start)))throw fail(409,'This teaching window overlaps another open window.');
   const windowId='WP-'+crypto.randomUUID().slice(0,12).toUpperCase();
-  await sheets(token,'POST',"'Slots'!A:G",{values:[[windowId,day,start,end,safe(location),'OPEN','']]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+  await sheets(token,'POST',"'Slots'!A:H",{values:[[windowId,day,start,end,safe(location),'OPEN','',coach]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0}};
  });
 }
 async function coachRemoveWindow(token,data) {
- await assertCoach(data);
+ const coach=await assertCoach(data);
  const windowId=clean(data.windowId);
- const all=await readRows(token,WINDOWS);
- const matched=all.find(row=>clean(row[0])===windowId);
+ const all=await readRows(token,"'Slots'!A2:H");
+ const matched=all.find(row=>clean(row[0])===windowId && clean(row[7]).toLowerCase()===coach);
  if(!matched)throw fail(404,'Teaching window not found.');
  const day=clean(matched[1]);
  return lockDay(day,async()=>{
-  const updated=await readRows(token,WINDOWS);
-  const index=updated.findIndex(row=>clean(row[0])===windowId && clean(row[5]).toUpperCase()==='OPEN');
+  const updated=await readRows(token,"'Slots'!A2:H");
+  const index=updated.findIndex(row=>clean(row[0])===windowId && clean(row[7]).toLowerCase()===coach && clean(row[5]).toUpperCase()==='OPEN');
   if(index<0)throw fail(409,'Teaching window is no longer open.');
   if(bookingRows(await readRows(token,BOOKINGS)).some(b=>b.window===windowId))throw fail(409,'This window has bookings. Keep it open or move the lessons first.');
   await sheets(token,'PUT',"'Slots'!F"+(index+2),{values:[['CLOSED']]},{valueInputOption:'RAW'});
