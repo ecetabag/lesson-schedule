@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1ko_r6wSoerKj4XOKOPKHq7f4TFE9xlsqnJ7h00SwTK8';
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
+const APP_TITLE = process.env.APP_TITLE || 'Waterpolo Lesson Schedule';
 const TZ = process.env.LESSON_TIMEZONE || 'America/Los_Angeles';
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ecetabag.github.io';
 const ALLOWED_ORIGINS = new Set([ORIGIN, ...(process.env.ADDITIONAL_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)]);
@@ -48,7 +49,7 @@ async function google(token,method,path,body,params) {
 const sheets=(token,method,range,body,params) => google(token,method,'spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values/'+encodeURIComponent(range)+(method==='POST'?':append':method==='PUT'?'':'') ,body,params);
 async function readRows(token,range){let v=await sheets(token,'GET',range);return v.values||[];}
 function bookingRows(data){return data.map((a,i)=>({row:i+2,id:a[0]||'',window:a[2]||'',date:a[3]||'',start:a[4]||'',end:a[5]||'',kid:a[6]||'',email:a[7]||'',phone:a[8]||'',location:a[9]||'',event:a[10]||'',status:a[11]||'',duration:Number(a[13]||30)})).filter(b=>b.id&&b.status==='CONFIRMED');}
-function windowsRows(data){return data.map(a=>({id:clean(a[0]),date:clean(a[1]),start:clean(a[2]),end:clean(a[3]),location:clean(a[4])||'Pool',status:clean(a[5]).toUpperCase(),legacy:clean(a[6]),coachEmail:clean(a[7]).toLowerCase()})).filter(w=>w.id && w.status==='OPEN' && !w.legacy && validDay(w.date) && validClock(w.start) && validClock(w.end) && minutes(w.end)>minutes(w.start));}
+function windowsRows(data){return data.map(a=>({id:clean(a[0]),date:clean(a[1]),start:clean(a[2]),end:clean(a[3]),location:clean(a[4])||'Location to be confirmed',status:clean(a[5]).toUpperCase(),legacy:clean(a[6]),coachEmail:clean(a[7]).toLowerCase()})).filter(w=>w.id && w.status==='OPEN' && !w.legacy && validDay(w.date) && validClock(w.start) && validClock(w.end) && minutes(w.end)>minutes(w.start));}
 function offsetFor(day) {
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,timeZoneName:'shortOffset'}).formatToParts(new Date(day+'T12:00:00Z'));
  const part=parts.find(x=>x.type==='timeZoneName')?.value||'GMT';
@@ -105,7 +106,7 @@ async function coachRequestCode(token,data,ip) {
  if(Number(count)>5||!coaches().has(email))return {message};
  const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
  await redis([['SET',coachCodeKey(email),sha(email+':'+code),'EX',600],['DEL','wp:coach:attempt:'+sha(email)]]);
- await mail(token,email,'Your Waterpolo coach sign-in code','Your coach sign-in code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this email.');
+ await mail(token,email,APP_TITLE+' provider sign-in code','Your sign-in code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this email.');
  return {message};
 }
 async function coachVerifyCode(data) {
@@ -191,7 +192,7 @@ async function mail(token,to,subject,body) {
 }
 async function booking(token,data) {
  const duration=durationOf(data.duration),slotId=clean(data.slotId),kid=clean(data.kidName),email=clean(data.email).toLowerCase(),phone=clean(data.phone);
- if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter the child name, a valid email, and phone number.');
+ if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter the participant name, a valid email, and phone number.');
  const requestedDay=slotId.split('@')[0]; // Lookup actual window ID below; IDs need not be dates.
  const windows=windowsRows(await readRows(token,WINDOWS));const window=windows.find(w=>w.id===requestedDay);
  if(!window)throw fail(409,'That appointment is no longer available.');
@@ -200,7 +201,7 @@ async function booking(token,data) {
   if(!slot)throw fail(409,'That appointment is no longer available.');
   const bookingId=crypto.randomUUID().replaceAll('-',''),eventId=bookingId;
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  const event={id:eventId,summary:'Water polo lesson — '+kid,location:slot.location,description:'Booking ID: '+bookingId, start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
+  const event={id:eventId,summary:APP_TITLE+' — '+kid,location:slot.location,description:'Booking ID: '+bookingId, start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
   await google(token,'POST',calendarPath(),event,{sendUpdates:'all'});
   try{
    const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration]];
@@ -215,7 +216,7 @@ async function findBookings(token,phone,kid) {
 }
 const identity = data => {
  const phone=normalizePhone(data.phone),kid=normalizeKid(data.kidName);
- if(phone.length<7||phone.length>15||kid.length<2||kid.length>100)throw fail(400,'Enter a valid phone number and child name.');
+ if(phone.length<7||phone.length>15||kid.length<2||kid.length>100)throw fail(400,'Enter a valid phone number and participant name.');
  return {phone,kid,key:sha(phone+'|'+kid)};
 };
 async function requestCode(token,data,ip) {
@@ -227,7 +228,7 @@ async function requestCode(token,data,ip) {
   const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
   const key='wp:otp:'+who.key;
   await redis([['SET',key,sha(who.key+':'+code),'EX',600],['DEL','wp:attempts:'+who.key]]);
-  await mail(token,matches[0].email,'Your water polo booking verification code','Your code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this message.');
+  await mail(token,matches[0].email,'Your booking verification code','Your code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this message.');
  }
  return {message:'If a booking exists, a code was sent to its email.'};
 }
