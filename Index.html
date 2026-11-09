@@ -1,1 +1,180 @@
-The requested file reference is not currently visible. Use files.search or files.list to rediscover the file, then retry with a returned ref_id or file_id.
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--navy:#17242b;--blue:#17242b;--mint:#edf1ef;--aqua:#e8edeb;--sand:#fafaf8;--paper:#fff;--line:#e6e9e7;--gray:#788187;--shadow:none}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--sand);color:var(--navy);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid #627c8a;outline-offset:3px}
+    .wrap{max-width:1080px;margin:auto;padding:0 32px}.top{border-bottom:1px solid var(--line);background:#fff}.top-inner{min-height:78px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--navy);font-family:Manrope,sans-serif;font-weight:800;font-size:14px;letter-spacing:-.35px}.brandmark{width:34px;height:34px;border:1px solid #d7dfdd;border-radius:9px;background:#f2f5f3;display:grid;place-items:center}.brandmark svg path{stroke:#263e47}.tag{border:1px solid #e0e6e2;border-radius:100px;background:#fff;padding:8px 12px;color:#65716f;font-size:11px;font-weight:600;letter-spacing:.015em}
+    .intro{padding:65px 0 38px;max-width:680px}.intro .kicker{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7c878b;margin:0 0 16px}.intro h1{font-family:Manrope,sans-serif;font-size:clamp(33px,4.2vw,48px);line-height:1.18;letter-spacing:-2.1px;margin:0 0 14px;font-weight:700}.intro p{color:#737e82;font-size:15px;line-height:1.75;margin:0;max-width:540px}
+    .booking{padding:0 0 95px}.section-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:15px}.section-head h2{font-family:Manrope,sans-serif;letter-spacing:-.65px;font-size:18px;font-weight:700;margin:0}.section-head p{font-size:13px;margin:6px 0 0;color:var(--gray)}.steps{font-size:12px;display:flex;gap:12px;color:var(--gray)}.steps b{color:var(--navy)}.booking-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:17px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:13px;padding:30px;box-shadow:none}.panel h3{font:700 14px Manrope,sans-serif;margin:0 0 26px;letter-spacing:-.15px}.monthhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.monthhead b{font:700 17px Manrope,sans-serif;letter-spacing:-.5px}.navbuttons{display:flex;gap:6px}.square{border:1px solid var(--line);background:#fff;width:33px;height:33px;border-radius:7px;color:var(--navy);font-size:19px;line-height:1}.square:hover{background:#f3f5f4}.weekday,.dates{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}.weekday{font-size:10px;color:#929c9e;margin-bottom:10px;font-weight:700;letter-spacing:.3px}.date{border:none;height:42px;border-radius:7px;background:transparent;font-size:13px;color:#b5bcbe}.date.enabled{background:#f2f5f3;color:#26363c;font-weight:600}.date.enabled:hover{background:#e7edeb}.date.chosen{background:#263b45!important;color:white!important}.slots-h{display:flex;justify-content:space-between;align-items:center;margin-top:32px;margin-bottom:14px}.slots-h b{font-size:13px}.slots-h small{color:var(--gray);font-size:11px}.duration-choice select{width:100%;padding:13px 14px;border:1px solid #dfe4e1;border-radius:10px;background:transparent;color:var(--navy);font:inherit;margin-top:8px}.slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.slot{padding:13px 5px;text-align:center;background:#fff;border:1px solid #dde3e1;border-radius:7px;color:var(--navy);font-size:12px;font-weight:600}.slot:hover{border-color:#728b93}.slot.selected{background:#263b45;color:white;border-color:#263b45}.empty{font-size:13px;line-height:1.65;color:#758589;background:#f8faf9;padding:23px;border-radius:7px;text-align:center}.summary{padding:15px;border:1px solid #e6ebe8;border-radius:8px;background:#f9faf9;margin:0 0 24px}.summary small{color:#8b9695;display:block;margin-bottom:5px;font-size:11px}.summary b{font-size:13px;line-height:1.6;display:block;font-weight:600}.formgrid{display:grid;gap:19px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:8px}.field input{width:100%;border:1px solid #dfe5e2;border-radius:7px;padding:14px 14px;background:#fff;outline:none;font-size:13px;color:var(--navy)}.field input:focus{border-color:#657e88;box-shadow:0 0 0 3px #e9eff0}.field input::placeholder{color:#aeb7b9}.submit{background:#263b45;border:0;border-radius:7px;padding:15px 18px;font-weight:700;color:white;width:100%;margin-top:24px;font-size:13px;transition:.15s}.submit:hover{background:#39515b}.submit:disabled{opacity:.5;cursor:not-allowed}.fine{color:#899496;font-size:11px;text-align:center;line-height:1.65;margin:13px 0 0}.error{background:#fff0ed;color:#a23c30;font-size:13px;line-height:1.5;padding:12px;border-radius:7px;margin-top:15px;display:none}.success{display:none}.success .check{border-radius:50%;width:50px;height:50px;background:#e8f0eb;color:#285c4e;display:grid;place-items:center;margin:5px 0 22px;font-size:23px}.success h3{font:700 23px Manrope,sans-serif;margin:0 0 8px}.success p{color:var(--gray);line-height:1.8;font-size:14px}.confirm{background:#f8faf9;border:1px solid var(--line);border-radius:7px;padding:18px;margin:25px 0;font-size:13px;line-height:1.8}.secondary{width:100%;padding:13px;background:white;border:1px solid #d7dfdc;border-radius:7px;font-weight:600;color:var(--navy)}.footer{border-top:1px solid var(--line);text-align:center;padding:24px;font-size:11px;color:#9aa3a5;background:white}.loader{color:var(--gray);font-size:13px;padding:25px;text-align:center}.manage-link{border:0;background:transparent;color:#263b45;text-decoration:underline;text-underline-offset:4px;font-size:12px;font-weight:700;padding:9px 0}.manage-area{padding:0 0 80px;max-width:770px}.manage-area .panel{padding:30px}.muted{color:var(--gray);font-size:13px;line-height:1.6}.manage-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.manage-option{padding:12px 6px;border:1px solid #dfe5e2;background:#fff;border-radius:7px;font-size:12px}.manage-option:hover{border-color:#263b45}.appointment{border:1px solid var(--line);padding:17px;border-radius:8px;margin:10px 0;display:flex;align-items:center;justify-content:space-between;gap:12px}.appointment b{font-size:13px}.appointment button{border:1px solid #ccd7d3;border-radius:7px;background:#fff;padding:10px 13px;font-size:12px;font-weight:700}.notice{padding:12px 14px;background:#f2f5f3;border-radius:7px;color:#263b45;font-size:13px;line-height:1.6;margin-top:15px}.hidden{display:none!important}
+    /* Quiet, choice-first landing page. The booking and management pages stay functional. */
+    .home-screen{min-height:calc(100svh - 148px);display:grid;place-items:center;padding:70px 0 110px}
+    .home-content{width:100%;max-width:650px;text-align:center}
+    .home-eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;color:#788488;margin-bottom:18px}
+    .home-content h1{font:600 clamp(34px,4vw,46px)/1.2 Manrope,sans-serif;letter-spacing:-1.9px;margin:0 0 16px}
+    .home-description{font-size:14px;line-height:1.8;color:#758087;margin:0 auto 36px;max-width:440px}
+    .home-actions{display:grid;gap:14px;text-align:left}
+    .home-action{width:100%;min-height:108px;display:flex;align-items:center;gap:22px;padding:23px 26px;background:transparent;border:1px solid #d8dfdc;border-radius:17px;text-align:left;color:var(--navy);transition:border-color .18s ease,background .18s ease,transform .18s ease}
+    .home-action:hover{border-color:#82949a;background:#ffffff;transform:translateY(-2px)}
+    .home-action:focus-visible{outline:2px solid #627c8a;outline-offset:3px}
+    .action-icon{width:53px;height:53px;min-width:53px;display:grid;place-items:center;border:1px solid #e1e6e4;border-radius:14px;color:#334b55}
+    .action-copy{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+    .action-copy strong{font:700 15px Manrope,sans-serif;letter-spacing:-.35px}
+    .action-copy>span{font-size:12px;color:#7f898e;line-height:1.55}
+    .action-arrow{color:#8b999c;flex-shrink:0}
+    .page-back{padding:36px 0 20px}.back-link{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font-size:12px;font-weight:600;color:#6e7a7f}.back-link:hover{color:#1e3944}
+    #booking:not(.hidden),#manage:not(.hidden){padding-top:12px}
+    #manage:not(.hidden){min-height:calc(100svh - 240px)}
+    @media(max-width:600px){.home-screen{min-height:calc(100svh - 132px);padding:50px 0 80px}.home-content h1{font-size:33px}.home-description{font-size:13px;margin-bottom:29px}.home-action{min-height:97px;padding:19px 17px;gap:15px;border-radius:14px}.action-icon{height:46px;width:46px;min-width:46px;border-radius:12px}.action-copy strong{font-size:13px}.action-copy>span{font-size:11px}}
+    @media(max-width:790px){.wrap{padding:0 18px}.top-inner{min-height:66px}.intro{padding:44px 0 31px}.intro h1{font-size:36px;letter-spacing:-1.7px}.booking-grid{grid-template-columns:1fr}.panel{padding:22px}.tag{font-size:10px}.steps{display:none}.booking{padding-bottom:52px}.brand{font-size:12px}.section-head{margin-bottom:17px}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap top-inner"><a class="brand" href="#top" id="brandHome"><span class="brandmark"><svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M2 15c3-5 5 5 9 0s6 5 11-1M2 20c3-5 5 5 9 0s6 5 11-1M7 5a3 3 0 1 0 0 .1" stroke="#263e47" stroke-width="1.7" stroke-linecap="round"/></svg></span>WATERPOLO <span style="font-weight:500">LESSONS</span></a><span class="tag">Online scheduling</span></div></header>
+  <main id="top" class="wrap">
+  <section id="home" class="home-screen" aria-labelledby="homeTitle">
+    <div class="home-content">
+      <div class="home-eyebrow">PRIVATE WATER POLO LESSONS</div>
+      <h1 id="homeTitle">Lesson scheduling</h1>
+      <p class="home-description">Book a new session or make changes to an existing reservation.</p>
+      <div class="home-actions">
+        <button type="button" class="home-action" id="openBooking">
+          <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg></span>
+          <span class="action-copy"><strong>New lesson</strong><span>Choose a time and reserve a session</span></span>
+          <svg class="action-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+        </button>
+        <button type="button" class="home-action" id="openManage">
+          <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 16h4m-2-2v4m5-3 4-4"/></svg></span>
+          <span class="action-copy"><strong>Manage lesson booking</strong><span>View or change an existing session</span></span>
+          <svg class="action-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+  <div id="pageBack" class="page-back hidden"><button type="button" id="backHome" class="back-link"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Back to options</button></div>
+  <section id="booking" class="booking hidden"><div class="section-head"><div><h2>Schedule your lesson</h2><p>Choose a 30- or 60-minute lesson. Times are scheduled back-to-back.</p></div><div class="steps"><b>01 &nbsp; Select a time</b><span>→</span><span>02 &nbsp; Your details</span><span>→</span><span>03 &nbsp; Confirm</span></div></div><div class="booking-grid"><div class="panel"><h3>01 / Choose your lesson</h3><div class="field duration-choice"><label for="duration">Lesson duration</label><select id="duration" aria-label="Lesson duration"><option value="30">30 minutes</option><option value="60">60 minutes</option></select></div><div style="height:16px"></div><div class="monthhead"><b id="monthName">Loading...</b><div class="navbuttons"><button id="prev" class="square" aria-label="Previous month">‹</button><button id="next" class="square" aria-label="Next month">›</button></div></div><div class="weekday"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div><div id="dates" class="dates"></div><div class="slots-h"><b id="slotHeading">Available times</b><small id="timezoneLabel"></small></div><div id="slots" class="empty">Loading available lessons...</div></div><div class="panel"><div id="bookingFormWrap"><h3>02 / Your details</h3><div class="summary"><small>Selected lesson</small><b id="selectedLabel">Choose a date and time on the left</b></div><form id="bookingForm"><div class="formgrid"><div class="field"><label for="kidName">Child's name</label><input id="kidName" name="kidName" type="text" placeholder="e.g. Alex Johnson" minlength="2" maxlength="100" autocomplete="off" required></div><div class="field"><label for="email">Parent / guardian email</label><input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required></div><div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" placeholder="(555) 123-4567" autocomplete="tel" minlength="7" maxlength="24" required></div></div><div id="error" class="error" role="alert"></div><button id="submit" class="submit" type="submit" disabled>Confirm booking →</button><p class="fine">By booking, you agree to share these details with your instructor for lesson scheduling. No payment is collected.</p></form></div><div id="success" class="success" aria-live="polite"><div class="check">✓</div><h3>You're booked!</h3><p>Your waterpolo lesson is confirmed. A Google Calendar invitation has been sent to your email address; accept it to add the lesson to your calendar.</p><div class="confirm" id="confirmationDetails"></div><button id="bookAnother" class="secondary">Book another lesson</button></div></div></div></section>
+  <section id="manage" class="manage-area hidden"><div class="section-head"><div><h2>Manage an existing booking</h2><p>Change your lesson time using your phone number and child's name.</p></div></div>
+  <div class="panel">
+    <div id="manageStart"><p class="muted">Enter the phone number and child’s name used when booking. For your security, we’ll send a verification code to the email address on the reservation.</p><form id="manageRequest"><div class="formgrid"><div class="field"><label for="managePhone">Parent / guardian phone number</label><input id="managePhone" type="tel" required autocomplete="tel" minlength="7" maxlength="24" placeholder="(555) 123-4567"></div><div class="field"><label for="manageKid">Child's name</label><input id="manageKid" required minlength="2" maxlength="100" placeholder="Child's full name"></div></div><button class="submit" id="manageRequestBtn" type="submit">Send verification code</button></form></div>
+    <div id="manageVerify" class="hidden"><p class="muted">If an upcoming booking matches your details, a six-digit code has been sent to the email on the reservation.</p><form id="manageVerifyForm"><div class="field"><label for="manageCode">Verification code</label><input id="manageCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required autocomplete="one-time-code"></div><button class="submit" id="manageVerifyBtn" type="submit">Verify and view bookings</button></form><button class="manage-link" id="manageReset" type="button">Start over</button></div>
+    <div id="manageAppointments" class="hidden"><h3>Your upcoming lessons</h3><div id="manageList"></div><div id="manageReschedule" class="hidden"><h3>Choose a new time</h3><p class="muted">Times remain back-to-back within each hour. Moving a lesson between two others requires help from the instructor.</p><div id="manageTimes" class="manage-options"></div></div><button class="manage-link" id="manageLogout" type="button">Finish managing bookings</button></div>
+    <div id="manageError" class="error" role="alert"></div><div id="manageNotice" class="notice hidden" role="status"></div>
+  </div></section></main><footer class="footer">Waterpolo Lessons · Scheduling</footer>
+  <script>
+    'use strict';
+    const $=id=>document.getElementById(id);
+    function setView(view){
+      const home=view==='home';
+      $('home').classList.toggle('hidden',!home);
+      $('booking').classList.toggle('hidden',view!=='booking');
+      $('manage').classList.toggle('hidden',view!=='manage');
+      $('pageBack').classList.toggle('hidden',home);
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+    const requestedView=new URLSearchParams(location.search).get('view');
+    $('openBooking').addEventListener('click',()=>{setView('booking');loadSlots();});
+    $('openManage').addEventListener('click',()=>{resetManage();setView('manage');$('managePhone').focus();});
+    $('backHome').addEventListener('click',()=>setView('home'));
+    $('brandHome').addEventListener('click',event=>{event.preventDefault();setView('home')});
+    const state={slots:[],selectedDate:null,selectedSlot:null,month:new Date(),timezone:'',duration:30};
+    state.month=new Date(state.month.getFullYear(),state.month.getMonth(),1);
+    const niceDate=key=>new Date(key+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const niceTime=t=>{const [h,m]=t.split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`};
+    const dateKey=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    function renderCalendar(){
+      $('monthName').textContent=state.month.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      const y=state.month.getFullYear(),m=state.month.getMonth(),first=(new Date(y,m,1).getDay()+6)%7,count=new Date(y,m+1,0).getDate();
+      const available=new Set(state.slots.map(s=>s.date));const dates=$('dates');dates.replaceChildren();
+      for(let i=0;i<first;i++)dates.appendChild(document.createElement('span'));
+      for(let day=1;day<=count;day++){
+        const key=dateKey(y,m,day),btn=document.createElement('button');btn.type='button';btn.textContent=day;btn.className='date'+(available.has(key)?' enabled':'')+(state.selectedDate===key?' chosen':'');btn.disabled=!available.has(key);
+        if(!btn.disabled)btn.onclick=()=>{state.selectedDate=key;state.selectedSlot=null;renderCalendar();renderSlots();renderSelected()};
+        dates.appendChild(btn);
+      }
+      const today=new Date();const current=new Date(today.getFullYear(),today.getMonth(),1);
+      $('prev').disabled=state.month<=current;$('prev').style.opacity=$('prev').disabled?'.35':'1';
+    }
+    function renderSlots(){
+      const container=$('slots');container.replaceChildren();container.className='';
+      const slots=state.slots.filter(s=>s.date===state.selectedDate);
+      $('slotHeading').textContent=state.selectedDate?'Available times · '+new Date(state.selectedDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'Available times';
+      if(!slots.length){container.className='empty';container.textContent=state.slots.length?'Select a highlighted date to see available times.':'No lesson times are currently available. Please check back soon.';return;}
+      container.className='slot-grid';slots.forEach(s=>{const btn=document.createElement('button');btn.type='button';btn.className='slot'+(state.selectedSlot?.id===s.id?' selected':'');btn.textContent=niceTime(s.start);btn.setAttribute('aria-pressed',String(state.selectedSlot?.id===s.id));btn.onclick=()=>{state.selectedSlot=s;renderSlots();renderSelected()};container.appendChild(btn)});
+    }
+    function renderSelected(){const s=state.selectedSlot;$('selectedLabel').textContent=s?`${niceDate(s.date)} · ${niceTime(s.start)}–${niceTime(s.end)} · ${state.duration} min · ${s.location}`:'Choose a date and time on the left';$('submit').disabled=!s;}
+    function showError(message){$('error').textContent=message;$('error').style.display='block';}
+    function hideError(){$('error').style.display='none';}
+    function loadSlots(){
+      $('slots').className='empty';$('slots').textContent='Loading available times…';
+      if(!(window.google&&google.script&&google.script.run)){ $('slots').className='empty';$('slots').textContent='To activate bookings, deploy this page as a Google Apps Script web app. See README.';return;}
+      google.script.run.withSuccessHandler(data=>{
+        state.slots=data.slots||[];state.timezone=data.timezone||'';$('timezoneLabel').textContent=state.timezone;
+        if(state.selectedDate&&!state.slots.some(s=>s.date===state.selectedDate)){state.selectedDate=null;state.selectedSlot=null;}
+        if(!state.selectedDate&&state.slots.length){state.selectedDate=state.slots[0].date;const d=new Date(state.selectedDate+'T12:00:00');state.month=new Date(d.getFullYear(),d.getMonth(),1);}
+        renderCalendar();renderSlots();renderSelected();
+      }).withFailureHandler(err=>{ $('slots').className='empty';$('slots').textContent=err.message||'Unable to load available lessons.';renderCalendar(); }).listAvailableSlots(state.duration);
+    }
+    $('duration').addEventListener('change',()=>{state.duration=Number($('duration').value);state.selectedDate=null;state.selectedSlot=null;loadSlots();});
+    if(requestedView==='booking') $('openBooking').click();
+    if(requestedView==='manage') $('openManage').click();
+    $('prev').onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()-1,1);renderCalendar()};
+    $('next').onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()+1,1);renderCalendar()};
+    $('bookingForm').onsubmit=event=>{
+      event.preventDefault();hideError();if(!state.selectedSlot)return showError('Please select a lesson time.');
+      const slot=state.selectedSlot, payload={slotId:slot.id,duration:state.duration,kidName:$('kidName').value,email:$('email').value,phone:$('phone').value};
+      if(!$('bookingForm').reportValidity())return;
+      $('submit').disabled=true;$('submit').textContent='Confirming your lesson…';
+      google.script.run.withSuccessHandler(result=>{
+        $('bookingFormWrap').style.display='none';$('success').style.display='block';
+        $('confirmationDetails').textContent=`${niceDate(result.date)} · ${niceTime(result.start)}–${niceTime(result.end)}\n${result.location}\nInvitation sent to: ${result.email}`;
+        $('confirmationDetails').style.whiteSpace='pre-line';
+        state.selectedSlot=null;loadSlots();
+      }).withFailureHandler(err=>{
+        showError(err.message||'Unable to book this time. Try again.');$('submit').textContent='Confirm booking →';$('submit').disabled=false;loadSlots();
+      }).bookLesson(payload);
+    };
+    $('bookAnother').onclick=()=>{$('success').style.display='none';$('bookingFormWrap').style.display='block';$('bookingForm').reset();$('submit').textContent='Confirm booking →';hideError();state.selectedSlot=null;loadSlots();};
+    const manage={token:'',phone:'',kidName:'',bookings:[],activeBookingId:''};
+    function manageError(message){$('manageError').textContent=message;$('manageError').style.display='block';$('manageNotice').classList.add('hidden');}
+    function manageClear(){ $('manageError').style.display='none';$('manageNotice').classList.add('hidden'); }
+    function manageNotice(message){$('manageNotice').textContent=message;$('manageNotice').classList.remove('hidden');$('manageError').style.display='none';}
+    function manageBusy(id,busy,label){$(id).disabled=busy;$(id).textContent=busy?'Working…':label;}
+    function resetManage(){manage.token='';manage.bookings=[];manage.activeBookingId='';$('manageStart').classList.remove('hidden');$('manageVerify').classList.add('hidden');$('manageAppointments').classList.add('hidden');$('manageReschedule').classList.add('hidden');$('manageCode').value='';manageClear();}
+    $('manageReset').onclick=resetManage;$('manageLogout').onclick=resetManage;
+    $('manageRequest').onsubmit=e=>{
+      e.preventDefault();manageClear();manage.phone=$('managePhone').value.trim();manage.kidName=$('manageKid').value.trim();
+      if(!(window.google&&google.script&&google.script.run))return manageError('Deploy the Google Apps Script web app to enable booking management.');
+      manageBusy('manageRequestBtn',true,'Send verification code');
+      google.script.run.withSuccessHandler(()=>{manageBusy('manageRequestBtn',false,'Send verification code');$('manageStart').classList.add('hidden');$('manageVerify').classList.remove('hidden');}).withFailureHandler(err=>{manageBusy('manageRequestBtn',false,'Send verification code');manageError(err.message||'Unable to send code.');}).requestManageCode({phone:manage.phone,kidName:manage.kidName});
+    };
+    $('manageVerifyForm').onsubmit=e=>{
+      e.preventDefault();manageClear();manageBusy('manageVerifyBtn',true,'Verify and view bookings');
+      google.script.run.withSuccessHandler(data=>{manageBusy('manageVerifyBtn',false,'Verify and view bookings');manage.token=data.token;manage.bookings=data.bookings||[];$('manageVerify').classList.add('hidden');$('manageAppointments').classList.remove('hidden');renderManageBookings();}).withFailureHandler(err=>{manageBusy('manageVerifyBtn',false,'Verify and view bookings');manageError(err.message||'Invalid code.');}).verifyManageCode({phone:manage.phone,kidName:manage.kidName,code:$('manageCode').value.trim()});
+    };
+    function managePayload(extra){return Object.assign({phone:manage.phone,kidName:manage.kidName,token:manage.token},extra||{});}
+    function renderManageBookings(){
+      const list=$('manageList');list.replaceChildren();
+      if(!manage.bookings.length){const p=document.createElement('p');p.className='muted';p.textContent='No upcoming bookings.';list.appendChild(p);return;}
+      manage.bookings.forEach(b=>{const div=document.createElement('div');div.className='appointment';const label=document.createElement('b');label.textContent=niceDate(b.date)+' · '+niceTime(b.start)+'–'+niceTime(b.end);const button=document.createElement('button');button.type='button';button.textContent='Change time';button.onclick=()=>loadManageTimes(b.bookingId);div.append(label,button);list.appendChild(div);});
+    }
+    function loadManageTimes(id){
+      manage.activeBookingId=id;manageClear();$('manageReschedule').classList.remove('hidden');const host=$('manageTimes');host.replaceChildren();host.textContent='Loading available times…';
+      google.script.run.withSuccessHandler(data=>{host.replaceChildren();if(!data.slots.length){host.textContent='No eligible new times are available. Please contact your instructor.';return;}
+        data.slots.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='manage-option';b.textContent=niceDate(s.date)+' · '+niceTime(s.start);b.onclick=()=>changeManageTime(s);host.appendChild(b);});
+      }).withFailureHandler(err=>manageError(err.message||'Could not load times.')).listRescheduleOptions(managePayload({bookingId:id}));
+    }
+    function changeManageTime(slot){
+      if(!confirm('Move your lesson to '+niceDate(slot.date)+' at '+niceTime(slot.start)+'?'))return;
+      const host=$('manageTimes');host.querySelectorAll('button').forEach(b=>b.disabled=true);manageClear();
+      google.script.run.withSuccessHandler(result=>{const ix=manage.bookings.findIndex(b=>b.bookingId===manage.activeBookingId);if(ix>=0)manage.bookings[ix]=result.booking;renderManageBookings();$('manageReschedule').classList.add('hidden');manageNotice('Lesson updated to '+niceDate(result.booking.date)+' at '+niceTime(result.booking.start)+'. Your calendar invitation will be updated.');loadSlots();}).withFailureHandler(err=>{manageError(err.message||'Could not change lesson.');host.querySelectorAll('button').forEach(b=>b.disabled=false);}).rescheduleLesson(managePayload({bookingId:manage.activeBookingId,slotId:slot.id}));
+    }
+    renderCalendar();loadSlots();
+  </script>
+</body>
+</html>
