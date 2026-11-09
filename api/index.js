@@ -128,7 +128,6 @@ async function assertCoach(data) {
  return email;
 }
 async function coachAvailability(token,data) {
- await assertCoach(data);
  const coach=await assertCoach(data);
  const [windows,bookings]=await Promise.all([readRows(token,"'Slots'!A2:H"),readRows(token,BOOKINGS)]);
  return {windows:windowsRows(windows).filter(w=>w.coachEmail===coach).map(w=>({...w,bookingCount:bookingRows(bookings).filter(b=>b.window===w.id).length})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),timezone:TZ};
