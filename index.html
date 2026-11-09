@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f8f9f7"><meta name="description" content="Private water polo lesson booking.">
-<title>Waterpolo Lessons — Schedule</title>
+<meta name="theme-color" content="#f8f9f7"><meta name="description" content="Simple appointments and availability management.">
+<title>Waterpolo Lesson Schedule</title>
 <style>
 :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#192c35;background:#f8f9f7;font-synthesis:none}*{box-sizing:border-box}
 body{min-height:100vh;margin:0;display:flex;flex-direction:column}header{height:82px;padding:0 clamp(22px,5vw,75px);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e6ece8}
@@ -42,32 +42,32 @@ button:focus-visible{outline:3px solid #9fbcaf;outline-offset:2px}
 </style>
 </head>
 <body>
-<header><a href="#" class="brand" id="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M2.5 12c5-5 8-5 13 0s8 5 12 0M2.5 19c5-5 8-5 13 0s8 5 12 0" stroke="#30575a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>Waterpolo Lessons</a><button type="button" class="coach-link" data-go="coach">Coach login</button></header>
+<header><a href="#" class="brand" id="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M2.5 12c5-5 8-5 13 0s8 5 12 0M2.5 19c5-5 8-5 13 0s8 5 12 0" stroke="#30575a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><span id="appBrand">Waterpolo Lesson Schedule</span></a><button type="button" class="coach-link" data-go="coach">Coach login</button></header>
 <main>
-<section id="home" class="screen active"><div class="eyebrow">PRIVATE WATER POLO LESSONS</div><h1>Lesson scheduling.</h1><p class="intro">Book a private lesson or manage an existing reservation.</p>
-<button class="choice" data-go="booking"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v6M9 16h6"/></svg></span><span class="description"><b>New lesson</b><span>Choose a date, time and duration</span></span><span class="arrow">→</span></button>
-<button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage lesson booking</b><span>Find and reschedule a lesson</span></span><span class="arrow">→</span></button>
+<section id="home" class="screen active"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Waterpolo Lesson Schedule</h1><p class="intro">Book an appointment or manage an existing reservation.</p>
+<button class="choice" data-go="booking"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v6M9 16h6"/></svg></span><span class="description"><b>Book an appointment</b><span>Choose a date, time and duration</span></span><span class="arrow">→</span></button>
+<button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage a booking</b><span>Find and reschedule your appointment</span></span><span class="arrow">→</span></button>
 </section>
-<section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW LESSON</div><h1>Find a time.</h1><p class="intro">Select your lesson duration and an available date.</p>
-<div class="label">Lesson duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute lesson</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute lesson</small></button></div>
+<section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW BOOKING</div><h1>Find a time.</h1><p class="intro">Select your appointment length and an available date.</p>
+<div class="label">Appointment duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute appointment</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute appointment</small></button></div>
 <div class="month"><button id="prevMonth" aria-label="Previous month">‹</button><b id="monthTitle"></b><button id="nextMonth" aria-label="Next month">›</button></div><div class="calendar" id="calendar"></div>
 <div id="timesWrap" class="hidden"><div class="label">Available start times</div><div id="times" class="time-grid"></div></div>
-<form id="bookingForm" class="hidden"><div class="divider"></div><div class="label">Child's full name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Child's full name"><div class="label">Parent or guardian email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><button class="action" type="submit" id="confirmBtn">Confirm lesson →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
+<form id="bookingForm" class="hidden"><div class="divider"></div><div class="label" id="clientNameLabel">Participant name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Participant name"><div class="label" id="contactEmailLabel">Contact email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><button class="action" type="submit" id="confirmBtn">Confirm booking →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
 </section>
-<section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE RESERVATION</div><h1>Change a lesson.</h1><p class="intro">Enter your phone number and child's name to receive a verification code at the email address used when booking.</p>
-<form id="lookupForm"><label class="label" for="phone">Parent phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><label class="label" for="kid">Child's full name</label><input id="kid" name="kidName" required placeholder="Child's full name"><button type="submit" id="requestBtn" class="action">Send verification code →</button></form>
-<form id="verifyForm" class="hidden"><label class="label" for="code">Email verification code</label><input id="code" name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required placeholder="6-digit code"><button id="verifyBtn" type="submit" class="action">Verify and view lessons →</button></form>
-<div id="appointments" class="hidden"><div class="label">Your upcoming lessons</div><div id="appointmentList"></div></div>
+<section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE RESERVATION</div><h1>Change a booking.</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
+<form id="lookupForm"><label class="label" for="phone">Contact phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><label class="label" for="kid">Participant name</label><input id="kid" name="kidName" required placeholder="Participant name"><button type="submit" id="requestBtn" class="action">Send verification code →</button></form>
+<form id="verifyForm" class="hidden"><label class="label" for="code">Email verification code</label><input id="code" name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required placeholder="6-digit code"><button id="verifyBtn" type="submit" class="action">Verify and view bookings →</button></form>
+<div id="appointments" class="hidden"><div class="label">Your upcoming appointments</div><div id="appointmentList"></div></div>
 <div id="reschedulePane" class="hidden"><div class="divider"></div><div class="label">Choose a new available time</div><div id="rescheduleTimes" class="time-grid"></div></div>
 </section>
 
 <section id="coach" class="screen">
 <button class="back" type="button" data-go="home">← Back</button>
-<div class="eyebrow">COACH PORTAL</div><h1>Manage availability.</h1>
-<p class="intro">Sign in with your approved coach email. Set your teaching hours here, and available lessons will appear on the parent calendar automatically.</p>
+<div class="eyebrow">PROVIDER PORTAL</div><h1>Manage availability.</h1>
+<p class="intro">Sign in with your approved provider email. Set your available hours here, and bookable appointments will appear on the public calendar automatically.</p>
 <form id="coachEmailForm">
- <label class="label" for="coachEmail">Coach email</label>
- <input id="coachEmail" name="email" type="email" autocomplete="email" required placeholder="coach@example.com">
+ <label class="label" for="coachEmail">Provider email</label>
+ <input id="coachEmail" name="email" type="email" autocomplete="email" required placeholder="provider@example.com">
  <button class="action" id="coachSendBtn" type="submit">Email me a sign-in code →</button>
 </form>
 <form id="coachCodeForm" class="hidden">
@@ -87,19 +87,29 @@ button:focus-visible{outline:3px solid #9fbcaf;outline-offset:2px}
   <label class="label" for="coachLocation">Pool / location</label>
   <input id="coachLocation" maxlength="120" value="Pool" required placeholder="Pool name">
   <button class="action" id="coachSaveBtn" type="submit">Add teaching window →</button>
-  <p class="small">Choose the full hours you can teach. Parents book 1-hour or 1.5-hour sessions within these windows. Times use the lesson timezone.</p>
+  <p class="small">Select the hours you are available. Visitors can book 1-hour or 1.5-hour appointments within these windows.</p>
  </form>
- <div class="coach-subtitle"><h2>Your available windows</h2><button id="coachRefresh" type="button">Refresh</button></div>
+ <div class="coach-subtitle"><h2>Available windows</h2><button id="coachRefresh" type="button">Refresh</button></div>
  <div id="coachWindows" aria-live="polite"></div>
 </div>
 </section>
 <div id="message" class="message" role="status"></div>
-</main><footer>Waterpolo Lessons · Private coaching</footer>
+</main><footer>Appointments · Scheduling made simple</footer>
 <script src="config.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),state={duration:60,slots:[],chosen:null,day:null,month:new Date(),verified:null,identity:null,bookingId:null,bookings:[],coachEmail:'',coachToken:null};
 state.month=new Date(state.month.getFullYear(),state.month.getMonth(),1);
+
+const APP_SETTINGS=window.APPOINTMENT_APP||{title:'Waterpolo Lesson Schedule',participantLabel:'Participant name',contactLabel:'Contact email',providerLabel:'Provider'};
+document.title=APP_SETTINGS.title;
+$('appBrand').textContent=APP_SETTINGS.title;
+$('appHeading').textContent=APP_SETTINGS.title;
+$('clientNameLabel').textContent=APP_SETTINGS.participantLabel;
+$('contactEmailLabel').textContent=APP_SETTINGS.contactLabel;
+document.querySelector('input[name="kidName"]').placeholder=APP_SETTINGS.participantLabel;
+$('kid').placeholder=APP_SETTINGS.participantLabel;
+
 const API=(window.WATERPOLO_API_URL||'').replace(/\/$/,'') || (location.hostname.endsWith('vercel.app')||location.hostname==='localhost'?location.origin+'/api/index':'');
 const niceDate=d=>new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 const niceTime=t=>{const [h,m]=t.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
@@ -120,7 +130,7 @@ async function api(action,data=null){
 }
 async function loadAvailability(){
  $('timesWrap').classList.add('hidden');$('bookingForm').classList.add('hidden');state.chosen=null;
- try{const result=await api('availability&duration='+state.duration);state.slots=result.slots||[];renderCalendar();if(!state.slots.length)message('No open lesson times right now. Please check again later.');}
+ try{const result=await api('availability&duration='+state.duration);state.slots=result.slots||[];renderCalendar();if(!state.slots.length)message('No available appointments right now. Please check again later.');}
  catch(e){state.slots=[];renderCalendar();message(e.message)}
 }
 function renderCalendar(){
@@ -146,7 +156,7 @@ function renderTimes(){
 $('bookingForm').onsubmit=async e=>{
  e.preventDefault();if(!state.chosen)return message('Select an available time first.');
  const b=$('confirmBtn');b.disabled=true;clearMessage();const data=Object.fromEntries(new FormData(e.currentTarget));
- try{const v=await api('book',{...data,duration:state.duration,slotId:state.chosen.id});$('bookingForm').reset();state.chosen=null;message('Lesson booked for '+niceDate(v.date)+' at '+niceTime(v.start)+'. Your calendar invitation is on its way.',true);await loadAvailability();}
+ try{const v=await api('book',{...data,duration:state.duration,slotId:state.chosen.id});$('bookingForm').reset();state.chosen=null;message('Booking confirmed for '+niceDate(v.date)+' at '+niceTime(v.start)+'. Your calendar invitation is on its way.',true);await loadAvailability();}
  catch(e){message(e.message)}finally{b.disabled=false;}
 };
 $('lookupForm').onsubmit=async e=>{
@@ -181,7 +191,7 @@ async function moveLesson(slot){
  document.querySelectorAll('#rescheduleTimes button').forEach(b=>b.disabled=true);
  try{
   const result=await api('reschedule',{...state.identity,token:state.verified,bookingId:state.bookingId,slotId:slot.id});
-  state.bookings=state.bookings.map(b=>b.bookingId===state.bookingId?result.booking:b);renderBookings();$('reschedulePane').classList.add('hidden');message('Lesson rescheduled. Your calendar event has been updated.',true);
+  state.bookings=state.bookings.map(b=>b.bookingId===state.bookingId?result.booking:b);renderBookings();$('reschedulePane').classList.add('hidden');message('Appointment rescheduled. Your calendar event has been updated.',true);
  }catch(e){message(e.message);document.querySelectorAll('#rescheduleTimes button').forEach(b=>b.disabled=false)}
 }
 
@@ -190,7 +200,7 @@ async function coachLoadWindows(){
  if(!state.coachToken)return;
  const host=$('coachWindows');host.textContent='Loading availability…';
  try{const result=await api('coachAvailability',coachPayload());host.replaceChildren();
-  if(!result.windows.length){const empty=document.createElement('div');empty.className='coach-empty';empty.textContent='No open teaching windows yet. Add your first availability above.';host.append(empty);return}
+  if(!result.windows.length){const empty=document.createElement('div');empty.className='coach-empty';empty.textContent='No open availability yet. Add your first window above.';host.append(empty);return}
   for(const w of result.windows){
    const row=document.createElement('div');row.className='coach-window';
    const info=document.createElement('div');const name=document.createElement('b');name.textContent=niceDate(w.date)+' · '+niceTime(w.start)+'–'+niceTime(w.end);
@@ -200,7 +210,7 @@ async function coachLoadWindows(){
    remove.disabled=w.bookingCount>0;remove.setAttribute('aria-label','Remove window on '+w.date+' at '+w.start);
    remove.onclick=async()=>{
     if(!confirm('Remove '+niceDate(w.date)+' '+niceTime(w.start)+'–'+niceTime(w.end)+'?'))return;
-    remove.disabled=true;try{await api('coachRemoveWindow',coachPayload({windowId:w.id}));message('Availability removed from the parent calendar.',true);await coachLoadWindows();}
+    remove.disabled=true;try{await api('coachRemoveWindow',coachPayload({windowId:w.id}));message('Availability removed from the public calendar.',true);await coachLoadWindows();}
     catch(e){message(e.message);remove.disabled=false}
    };row.append(remove);host.append(row);
   }
@@ -220,7 +230,7 @@ $('coachAddForm').onsubmit=async e=>{
  e.preventDefault();clearMessage();const btn=$('coachSaveBtn');btn.disabled=true;
  try{
   const r=await api('coachAddWindow',coachPayload({date:$('coachDate').value,start:$('coachStart').value,end:$('coachEnd').value,location:$('coachLocation').value.trim()}));
-  message('Availability added for '+niceDate(r.window.date)+'. Parents can now see eligible times.',true);await coachLoadWindows();
+  message('Availability added for '+niceDate(r.window.date)+'. Visitors can now see eligible times.',true);await coachLoadWindows();
  }catch(e){message(e.message)}finally{btn.disabled=false}
 };
 $('coachRefresh').onclick=()=>coachLoadWindows();
