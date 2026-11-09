@@ -147,6 +147,7 @@ async function coachAddWindow(token,data) {
   const windowId='WP-'+crypto.randomUUID().slice(0,12).toUpperCase();
   await sheets(token,'PUT',"'Slots'!H1",{values:[['Coach Email']]},{valueInputOption:'RAW'});
   await sheets(token,'POST',"'Slots'!A:H",{values:[[windowId,day,start,end,safe(location),'OPEN','',coach]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+  try{await notifyWaitlist(token,day)}catch(e){console.error('Waitlist notification deferred',e.message)}
   return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0}};
  });
 }
@@ -291,6 +292,127 @@ async function reschedule(token,data){
  return run(0);
 }
 
+
+/* Opt-in waitlist, next-day reminders and weekly coach publishing nudges. */
+const WAITLIST_RANGE = "'Waitlist'!A2:I";
+const SITE_URL = process.env.PUBLIC_SITE_URL || 'https://lesson-schedule-lake.vercel.app/';
+const todayInZone = () => new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+function localDayPlus(days){
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const obj=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+ const base=new Date(Date.UTC(Number(obj.year),Number(obj.month)-1,Number(obj.day)+days,12));
+ return base.toISOString().slice(0,10);
+}
+async function ensureWaitlist(token) {
+ const metadata=await google(token,'GET','spreadsheets/'+encodeURIComponent(SHEET_ID),undefined,{fields:'sheets.properties.title'});
+ if(!(metadata.sheets||[]).some(s=>s.properties.title==='Waitlist')){
+  try{
+   await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+':batchUpdate',{requests:[{addSheet:{properties:{title:'Waitlist',gridProperties:{frozenRowCount:1}}}}]});
+  }catch(e){
+   const second=await google(token,'GET','spreadsheets/'+encodeURIComponent(SHEET_ID),undefined,{fields:'sheets.properties.title'});
+   if(!(second.sheets||[]).some(s=>s.properties.title==='Waitlist'))throw e;
+  }
+ }
+ await sheets(token,'PUT',"'Waitlist'!A1:I1",{values:[['Waitlist ID','Created At','Requested Date','Duration (minutes)','Participant','Email','Status','Notified At','Unsubscribe Token']]},{valueInputOption:'RAW'});
+}
+function waitRows(rows){
+ return rows.map((a,i)=>({row:i+2,id:clean(a[0]),date:clean(a[2]),duration:Number(a[3]),participant:clean(a[4]),email:clean(a[5]).toLowerCase(),status:clean(a[6]),notifiedAt:clean(a[7]),unsubscribe:clean(a[8])})).filter(w=>w.id);
+}
+async function joinWaitlist(token,data,ip){
+ const date=clean(data.date),duration=durationOf(data.duration),email=clean(data.email).toLowerCase(),participant=clean(data.participant);
+ if(!validDay(date)||instant(date,'23:59').getTime()<Date.now()||instant(date,'00:00').getTime()>Date.now()+120*86400000)throw fail(400,'Choose a date within the next 120 days.');
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||participant.length<2||participant.length>100)throw fail(400,'Enter a valid participant name and email.');
+ if(data.consent!==true)throw fail(400,'Please agree to receive an availability email.');
+ const rate='wp:wait:rate:'+sha(ip).slice(0,40);
+ const [count]=await redis([['INCR',rate],['EXPIRE',rate,3600]]);
+ if(Number(count)>5)throw fail(429,'Too many waitlist requests. Try again later.');
+ await ensureWaitlist(token);
+ const existing=waitRows(await readRows(token,WAITLIST_RANGE));
+ if(existing.some(w=>w.date===date&&w.duration===duration&&w.email===email&&w.status==='WAITING'))return {message:'You are already on the waitlist for that day.'};
+ const tokenValue=id();
+ const entry=['WL-'+crypto.randomUUID(),new Date().toISOString(),date,duration,safe(participant),email,'WAITING','',tokenValue];
+ await sheets(token,'POST',"'Waitlist'!A:I",{values:[entry]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+ return {message:'You are on the waitlist. We will email you if an appointment becomes available. A time is not reserved.'};
+}
+async function unsubscribeWaitlist(token,data){
+ const unsubscribe=clean(data.token);
+ if(!/^[a-f0-9]{48}$/.test(unsubscribe))throw fail(400,'Invalid unsubscribe link.');
+ await ensureWaitlist(token);
+ const match=waitRows(await readRows(token,WAITLIST_RANGE)).find(w=>w.unsubscribe===unsubscribe);
+ if(match&&match.status==='WAITING')await sheets(token,'PUT',"'Waitlist'!G"+match.row,{values:[['UNSUBSCRIBED']]},{valueInputOption:'RAW'});
+ return {message:'You have been removed from the waitlist.'};
+}
+async function mailOnce(token,redisKey,to,subject,body,seconds=86400*7){
+ const [added]=await redis([['SET',redisKey,'1','NX','EX',seconds]]);
+ if(added!=='OK')return false;
+ try{await mail(token,to,subject,body);return true}
+ catch(e){await redis([['DEL',redisKey]]).catch(()=>{});throw e}
+}
+async function notifyWaitlist(token,onlyDate=null){
+ await ensureWaitlist(token);
+ const rows=waitRows(await readRows(token,WAITLIST_RANGE)).filter(w=>w.status==='WAITING'&&(!onlyDate||w.date===onlyDate)&&instant(w.date,'23:59').getTime()>Date.now());
+ if(!rows.length)return {sent:0,checked:0};
+ const byDuration=new Map(),cache=new Map();
+ let sent=0,checked=0;
+ for(const entry of rows.slice(0,40)){
+  checked++;
+  if(!byDuration.has(entry.duration))byDuration.set(entry.duration,available(token,entry.duration,null));
+  const all=await byDuration.get(entry.duration);
+  if(!all.some(slot=>slot.date===entry.date))continue;
+  const key='wp:wait:sent:'+sha(entry.id);
+  const link=SITE_URL+'#booking';
+  const optout=SITE_URL+'?unsubscribe='+encodeURIComponent(entry.unsubscribe);
+  try{
+   if(await mailOnce(token,key,entry.email,APP_TITLE+' — appointment available',
+    'Hi '+entry.participant+',\n\nAn appointment has opened up for '+entry.date+' ('+entry.duration+' minutes).\nBook here: '+link+
+    '\n\nThis is a notification, not a reservation. Times are first come, first served.\n\nStop these alerts: '+optout,86400*14)){
+    await sheets(token,'PUT',"'Waitlist'!G"+entry.row+':H'+entry.row,{values:[['NOTIFIED',new Date().toISOString()]]},{valueInputOption:'RAW'});
+    sent++;
+   }
+  }catch(e){console.error('Waitlist email failed',entry.id,e.message)}
+ }
+ return {sent,checked};
+}
+async function sendDailyReminders(token){
+ const tomorrow=localDayPlus(1);
+ const rows=bookingRows(await readRows(token,BOOKINGS)).filter(b=>b.date===tomorrow&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(b.email));
+ let sent=0;
+ for(const b of rows.slice(0,50)){
+  const key='wp:reminder:'+sha(b.id+'|'+b.date);
+  try{
+   if(await mailOnce(token,key,b.email,APP_TITLE+' — appointment reminder',
+    'Reminder: '+b.kid+' has an appointment tomorrow ('+b.date+') at '+b.start+' ('+b.duration+' minutes).\nLocation: '+b.location+
+    '\n\nTo manage your booking, visit '+SITE_URL+'\n\nTimes are in '+TZ+'.',86400*5))sent++;
+  }catch(e){console.error('Reminder failed',b.id,e.message)}
+ }
+ return {sent,candidates:rows.length,date:tomorrow};
+}
+async function promptCoaches(token){
+ const localDate=localDayPlus(0);
+ const weekday=new Date(localDate+'T12:00:00Z').getUTCDay();
+ if(weekday!==1)return {sent:0,reason:'not Monday'};
+ const coachesList=[...coaches()];
+ const windows=windowsRows(await readRows(token,"'Slots'!A2:H"));
+ const horizon=localDayPlus(14);
+ let sent=0;
+ for(const email of coachesList){
+  if(windows.some(w=>w.coachEmail===email&&w.date>=localDate&&w.date<=horizon))continue;
+  const key='wp:coach:nudge:'+sha(email);
+  try{
+   if(await mailOnce(token,key,email,APP_TITLE+' — please add your available hours',
+    'Hi,\n\nYou do not have any open teaching windows published for the next two weeks.\n\nPlease sign in to set up your availability: '+SITE_URL+
+    '\n\nUse the Coach login button at the top of the page.',86400*6))sent++;
+  }catch(e){console.error('Coach nudge failed',e.message)}
+ }
+ return {sent,coachesChecked:coachesList.length};
+}
+async function dailyAutomation(token){
+ const reminders=await sendDailyReminders(token);
+ const coaches=await promptCoaches(token);
+ const waitlist=await notifyWaitlist(token);
+ return {ok:true,reminders,coaches,waitlist};
+}
+
 export default async function handler(req,res){
  const origin=String(req.headers.origin||'');
  if(origin && (ALLOWED_ORIGINS.has(origin)||isSameOrigin(origin,req))){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');}
@@ -299,11 +421,15 @@ export default async function handler(req,res){
  try{
   const action=(req.method==='GET'?req.query.action:req.body?.action)||'';
   if(req.method==='GET'&&action==='health')return json(res,200,{ok:true,configured:!!(process.env.GOOGLE_REFRESH_TOKEN&&process.env.UPSTASH_REDIS_REST_TOKEN)});
+  if(action==='automation'){
+   if(req.method!=='GET'||!process.env.CRON_SECRET||!compare(clean(req.headers.authorization), 'Bearer '+process.env.CRON_SECRET))throw fail(401,'Unauthorized.');
+   envCheck();const token=await googleToken();return json(res,200,await dailyAutomation(token));
+  }
   envCheck();
   const token=await googleToken();
   const body=req.body||{};
   let value;
-  if(req.method==='GET'&&action==='availability')value={slots:await available(token,durationOf(req.query.duration||30),null),timezone:TZ};
+  if(req.method==='GET'&&action==='availability')value={slots:await available(token,durationOf(req.query.duration||60),null),timezone:TZ};
   else if(req.method==='POST'&&action==='book'){
    const client=String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0];
    const rate='wp:booking-rate:'+sha(client).slice(0,32);
@@ -321,6 +447,8 @@ export default async function handler(req,res){
   else if(req.method==='POST'&&action==='coachAddWindow')value=await coachAddWindow(token,body);
   else if(req.method==='POST'&&action==='coachRemoveWindow')value=await coachRemoveWindow(token,body);
   else if(req.method==='POST'&&action==='coachSignOut')value=await coachSignOut(body);
+  else if(req.method==='POST'&&action==='waitlistJoin')value=await joinWaitlist(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
+  else if(req.method==='POST'&&action==='waitlistLeave')value=await unsubscribeWaitlist(token,body);
   else throw fail(404,'Unknown API endpoint.');
   return json(res,200,value);
  }catch(err){const status=err.status||500;console.error('API error',status,err.message);return json(res,status,{error:status===500?'Unexpected server error. Please try again.':err.message});}
