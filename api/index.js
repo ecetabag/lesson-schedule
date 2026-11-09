@@ -144,6 +144,7 @@ async function coachAddWindow(token,data) {
   const rows=windowsRows(await readRows(token,WINDOWS));
   if(rows.some(w=>w.date===day&&minutes(start)<minutes(w.end)&&minutes(end)>minutes(w.start)))throw fail(409,'This teaching window overlaps another open window.');
   const windowId='WP-'+crypto.randomUUID().slice(0,12).toUpperCase();
+  await sheets(token,'PUT',"'Slots'!H1",{values:[['Coach Email']]},{valueInputOption:'RAW'});
   await sheets(token,'POST',"'Slots'!A:H",{values:[[windowId,day,start,end,safe(location),'OPEN','',coach]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0}};
  });
