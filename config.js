@@ -1,3 +1,4 @@
-// Google Apps Script deployment for Waterpolo Lesson Schedule.
-// This is a public web app URL, not a secret.
-window.WATERPOLO_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGtikl792nnJtbYQxX-KWDHhgU70o538K9v_yy-89tKQLSBepynTbJ_SN4lq9Laq4QXA/exec';
+// GitHub Pages: set this to your Vercel API URL after deploying Vercel.
+// The API base is public; do NOT put Google tokens or secrets in this file.
+// Example: 'https://YOUR-PROJECT.vercel.app/api/index'
+window.WATERPOLO_API_URL = '';
