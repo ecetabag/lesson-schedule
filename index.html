@@ -69,7 +69,7 @@ $('brand').onclick=e=>{e.preventDefault();navigate('home')};
 document.querySelectorAll('[data-duration]').forEach(b=>b.onclick=()=>{state.duration=Number(b.dataset.duration);document.querySelectorAll('[data-duration]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));state.chosen=null;state.day=null;$('bookingForm').classList.add('hidden');loadAvailability()});
 async function api(action,data=null){
  if(!API)throw Error('Booking API has not been deployed yet. Reservations cannot be submitted.');
- const endpoint=new URL(API);endpoint.searchParams.set('action',action);
+ const endpoint=new URL(API);const [actionName,queryString]=action.split('&');endpoint.searchParams.set('action',actionName);if(queryString){const query=new URLSearchParams(queryString);for(const [k,v] of query)endpoint.searchParams.set(k,v);}
  let res;try{res=await fetch(endpoint,{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify({action,...data}):undefined,cache:'no-store'});}catch{throw Error('Cannot connect to the booking service. No booking was made.')}
  let result;try{result=await res.json()}catch{throw Error('Booking service is unavailable. No booking was made.')}
  if(!res.ok)throw Error(result.error||'Booking service is temporarily unavailable.');
