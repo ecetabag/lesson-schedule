@@ -4,6 +4,19 @@ A minimal booking site with a **real serverless API**. The old Google Apps Scrip
 
 **Deployment status:** Source is committed to GitHub. The backend is **not live** until you deploy it to Vercel and configure the secret environment variables. The GitHub Pages front end currently shows a helpful configuration message instead of sending customers to the broken Apps Script page.
 
+## Reusable appointment scheduling app
+
+This project is a reusable scheduling foundation; **Waterpolo Lesson Schedule** is only the branding of this deployment. The public interface uses neutral language (appointments, participants, providers). The server API also supports configurable calendar event titles.
+
+### Customize another booking business
+- Change `window.APPOINTMENT_APP` in `config.js` to update the website's title and form labels.
+- Set the Vercel environment variable `APP_TITLE` to change the title used on Google Calendar events and provider sign-in emails.
+- Configure `COACH_EMAILS` as the list of approved providers.
+- Configure that business's **own Google Sheet ID, Calendar ID, and OAuth account**, and preferably a separate Vercel deployment. Do not combine unrelated businesses into the current waterpolo Sheet.
+- This version supports two booking durations: **60 and 90 minutes**. Supporting arbitrary service lengths, separate staff calendars, multiple locations, service prices, and independent business accounts will require additional backend changes; modifying labels does not create full multi-tenancy.
+
+**Reusable use cases:** language tutoring, piano lessons, private fitness, swim coaching, consulting calls, hair or beauty appointments, photography sessions, rental appointments, and studio visits.
+
 ## Architecture
 - Website: GitHub Pages (or deploy entire repo to Vercel).
 - API: `api/index.js` on Vercel, `/api/index` route; Node.js 20+.
