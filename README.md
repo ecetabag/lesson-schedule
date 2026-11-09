@@ -14,6 +14,21 @@ A minimal booking site with a **real serverless API**. The old Google Apps Scrip
 
 No payments, and do **not** put secrets, refresh tokens, or contact details in public GitHub files.
 
+## Coach login and availability dashboard
+
+Coaches can use the **Coach login** button in the site header. The login is protected by a one-time six-digit email code, valid for 10 minutes. An authorized session lasts 8 hours and can be signed out. The site never stores the coach token permanently in the browser.
+
+**Required Vercel setting:** create the `COACH_EMAILS` environment variable, containing one or more instructor emails separated by commas, e.g. `coach1@example.com,coach2@example.com`. Set it in the **Production** environment and redeploy. Only those email addresses can receive working sign-in codes. Avoid putting coach addresses in the public repository.
+
+After signing in:
+- Choose a future date, start time, end time, and pool/location.
+- Click **Add teaching window**. The API saves the row to the Google Sheet `Slots` tab (columns A–H, with column H containing the owning coach email).
+- Each coach sees and can remove their own open, unbooked teaching windows.
+- To protect existing reservations, a window with bookings cannot be removed through this dashboard.
+- Parents see available lesson times from all coaches on the booking calendar, subject to the existing single-calendar collision checks. Overlapping coach windows are not supported yet.
+
+**Lesson durations:** parents now choose **1 hour (60 minutes)** or **1.5 hours (90 minutes)**. Start times advance in 15-minute increments, and subsequent appointments are kept adjacent where possible. Teaching windows can span 1–12 hours.
+
 ## 1. Deploy the API to Vercel
 1. Sign in at https://vercel.com and **Add New → Project**.
 2. Import the GitHub repository `ecetabag/lesson-schedule`. Choose the **Other** framework preset (no frontend build command required).
@@ -68,7 +83,7 @@ In the `Slots` tab, enter one **available teaching window** per row:
 |---|---|---|---|---|---|---|
 | WP-001 | 2026-11-14 | 10:00 | 11:00 | Your pool | OPEN | |
 
-The first customer can book 30 minutes at any 15-minute starting increment inside a window. Subsequent customers can only book **adjacent** appointments, avoiding gaps. A 60-minute lesson requires 60 contiguous minutes. The API checks Calendar conflicts and Google Sheet bookings before confirming.
+The first customer can book a 60-minute lesson at 15-minute starting increments inside a window. Subsequent customers can only book **adjacent** appointments, avoiding gaps. A 90-minute lesson requires 90 contiguous minutes. The API checks Calendar conflicts and Google Sheet bookings before confirming.
 
 **The `Bookings` tab is automatically maintained by the API.** It contains student and parent details, duration, Calendar ID and status; don't publish the Sheet publicly.
 
@@ -77,7 +92,7 @@ The first customer can book 30 minutes at any 15-minute starting increment insid
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/index?action=health` | Safe status/configuration check |
-| GET | `/api/index?action=availability&duration=30` | Available 30- or 60-minute starts |
+| GET | `/api/index?action=availability&duration=60` | Available 60- or 90-minute starts |
 | POST | `/api/index` `{"action":"book",...}` | Create calendar event + save Sheet row |
 | POST | `/api/index` `{"action":"requestCode","phone":"...","kidName":"..."}` | Email a six-digit verification code (generic response) |
 | POST | `/api/index` `{"action":"verifyCode","phone":"...","kidName":"...","code":"..."}` | Get temporary management token |
@@ -85,6 +100,19 @@ The first customer can book 30 minutes at any 15-minute starting increment insid
 | POST | `/api/index` `{"action":"reschedule",...}` | Move existing calendar event + Sheet row |
 
 Do not send or post verification codes or credentials publicly. The API applies a per-date distributed lock before creating or moving bookings, and it rechecks availability while holding the lock. Clients receive Calendar invitations; private student details are not returned by availability requests.
+
+## Coach API endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `coachRequestCode` | Sends an email code to an approved coach |
+| POST | `coachVerifyCode` | Exchanges a six-digit code for a short-lived coach token |
+| POST | `coachAvailability` | Lists the signed-in coach's teaching windows |
+| POST | `coachAddWindow` | Adds an owned open window to Sheets |
+| POST | `coachRemoveWindow` | Closes an owned, unbooked window in Sheets |
+| POST | `coachSignOut` | Invalidates the coach's current session |
+
+These are `/api/index` POST requests with `action` in the request JSON.
 
 ## 7. Troubleshooting
 - `health` says `configured:false`: Vercel is missing an environment variable. Add it and redeploy.
