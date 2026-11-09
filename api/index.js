@@ -100,7 +100,7 @@ async function redis(commands) {
 }
 async function lockDay(day,work) {
  const key='wp:lock:'+day, token=id();
- const [ok]=await redis([['SET',key,token,'NX','PX',20000]]);
+ const [ok]=await redis([['SET',key,token,'NX','PX',60000]]);
  if(ok!=='OK')throw fail(409,'A booking is being processed. Please try again.');
  try{return await work();}finally{await redis([['EVAL',"if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",1,key,token]]).catch(()=>{});}
 }
