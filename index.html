@@ -408,19 +408,45 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
 .coach-request-actions .offer-btn{background:var(--brand-bg);color:#fff;border-color:var(--brand-bg)}
 .coach-request-actions button:disabled{opacity:.5;cursor:wait}
 @media(max-width:480px){.request-callout{padding:17px}.dashboard-requests{padding:14px}.coach-request-actions select{width:100%;max-width:none}}
+
+/* Calendar-first home: make request actions prominent before the dates. */
+body:has(#booking.active) main{padding-top:clamp(32px,4vw,55px)}
+#booking>.intro{margin-bottom:16px}
+#booking>.request-callout{margin:0 0 27px;padding:20px 23px;background:#f2f9f4;border-color:#bcdccb}
+#booking>.request-callout .request-callout-heading{display:block}
+#booking>.request-callout h3{font-size:20px}
+#booking>.request-callout .request-choices{margin-top:14px}
+#booking>.request-callout .request-primary{background:#173f36;color:white;min-height:45px}
+#booking>.request-callout .request-text{min-height:45px;display:flex;align-items:center}
+@media(max-width:500px){#booking>.request-callout{padding:17px}#booking>.request-callout .request-choices>*{flex:1;text-align:center;justify-content:center}}
 </style>
 </head>
 <body>
 <header><a href="#" class="brand" id="brand" aria-label="OnDeck — Waterpolo Lesson Schedule home"><img src="ondeck-logo.svg" width="188" height="30" alt="OnDeck" class="ondeck-header-logo"><span id="appBrand" class="sr-only">Waterpolo Lesson Schedule</span></a><button type="button" class="coach-link" data-go="coach">Coach login</button></header>
 <main>
-<section id="home" class="screen active"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Book a Session</h1><p class="intro" id="appSubtitle">Water polo coaching</p>
+<section id="home" class="screen"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Book a Session</h1><p class="intro" id="appSubtitle">Water polo coaching</p>
 <div class="home-actions">
 <button class="choice" data-go="booking"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v6M9 16h6"/></svg></span><span class="description"><b>Book a lesson</b><span>Choose a date, time and duration</span></span><span class="arrow">→</span></button>
 <button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage a lesson</b><span>Find and reschedule your lesson</span></span><span class="arrow">→</span></button>
 </div>
 </section>
-<section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW LESSON</div><h1>Book a lesson</h1><p class="intro">Select your lesson length and an available date.</p>
+<section id="booking" class="screen active"><div class="eyebrow">NEW LESSON</div><h1>Book a lesson</h1><p class="intro">Select your lesson length and an available date.</p>
 <div class="label">Lesson duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute lesson</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute lesson</small></button></div>
+<section class="request-callout">
+ <div class="request-callout-heading"><div><div class="eyebrow">PERSONAL SCHEDULING</div><h3>Can’t find a time that works?</h3><p>Request another time, or text Albert directly.</p></div></div>
+ <div class="request-choices"><button type="button" id="requestToggle" class="request-primary" aria-expanded="false" aria-controls="requestForm">Request another time →</button><a class="request-text" href="sms:+15103567916">Text Albert</a></div>
+ <form id="requestForm" class="hidden request-form">
+  <div class="two"><div><label class="label" for="requestDate">Preferred date</label><input id="requestDate" type="date" required></div><div><label class="label" for="requestPeriod">Preferred time</label><select id="requestPeriod" required><option value="morning">Morning · 8 AM–12 PM</option><option value="afternoon">Afternoon · 12–4 PM</option><option value="after4" selected>After 4 PM</option><option value="any">Any time</option></select></div></div>
+  <label class="label" for="requestDuration">Lesson length</label><select id="requestDuration"><option value="60">60 minutes</option><option value="90">90 minutes</option></select>
+  <div class="two"><div><label class="label" for="requestPerson">Participant name</label><input id="requestPerson" required maxlength="100" placeholder="Student name"></div><div><label class="label" for="requestEmail">Email</label><input id="requestEmail" type="email" required placeholder="you@example.com"></div></div>
+  <label class="label" for="requestPhone">Phone</label><input id="requestPhone" type="tel" required placeholder="+1 (555) 000-0000">
+  <label class="consent"><input type="checkbox" id="requestFlexible"> <span>Nearby days also work (within 3 days)</span></label>
+  <label class="label" for="requestNotes">Notes (optional)</label><textarea id="requestNotes" rows="2" maxlength="300" placeholder="Anything Albert should know?"></textarea>
+  <label class="consent"><input type="checkbox" id="requestSmsConsent" required><span>I agree to receive availability and scheduling updates by email. Text Albert only opens my Messages app; nothing is sent automatically.</span></label>
+  <p class="small">Submitting a request does not book or reserve a lesson. Offered times are first come, first served.</p>
+  <button class="action" id="requestSubmit" type="submit">Send request →</button>
+ </form>
+</section>
 <div class="booking-columns">
  <div class="calendar-column">
   <div class="month"><button id="prevMonth" aria-label="Previous month">‹</button><b id="monthTitle"></b><button id="nextMonth" aria-label="Next month">›</button></div>
@@ -434,21 +460,7 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
   <div id="times" class="time-grid"></div>
  </aside>
 </div>
-<section class="request-callout">
- <div class="request-callout-heading"><div><div class="eyebrow">PERSONAL SCHEDULING</div><h3>Need a different time?</h3><p>Tell Albert what works for you. He can offer a time, or OnDeck can let you know when one opens.</p></div></div>
- <div class="request-choices"><button type="button" id="requestToggle" class="request-primary" aria-expanded="false" aria-controls="requestForm">Request another time →</button><a class="request-text" href="sms:+15103567916">Text Albert</a></div>
- <form id="requestForm" class="hidden request-form">
-  <div class="two"><div><label class="label" for="requestDate">Preferred date</label><input id="requestDate" type="date" required></div><div><label class="label" for="requestPeriod">Preferred time</label><select id="requestPeriod" required><option value="morning">Morning · 8 AM–12 PM</option><option value="afternoon">Afternoon · 12–4 PM</option><option value="after4" selected>After 4 PM</option><option value="any">Any time</option></select></div></div>
-  <label class="label" for="requestDuration">Lesson length</label><select id="requestDuration"><option value="60">60 minutes</option><option value="90">90 minutes</option></select>
-  <div class="two"><div><label class="label" for="requestPerson">Participant name</label><input id="requestPerson" required maxlength="100" placeholder="Student name"></div><div><label class="label" for="requestEmail">Email</label><input id="requestEmail" type="email" required placeholder="you@example.com"></div></div>
-  <label class="label" for="requestPhone">Phone</label><input id="requestPhone" type="tel" required placeholder="+1 (555) 000-0000">
-  <label class="consent"><input type="checkbox" id="requestFlexible"> <span>Nearby days also work (within 3 days)</span></label>
-  <label class="label" for="requestNotes">Notes (optional)</label><textarea id="requestNotes" rows="2" maxlength="300" placeholder="Anything Albert should know?"></textarea>
-  <label class="consent"><input type="checkbox" id="requestSmsConsent" required><span>I agree to receive scheduling notifications by text from OnDeck. Message/data rates may apply. Reply STOP to opt out.</span></label>
-  <p class="small">Submitting a request does not book or reserve a lesson. Offered times are first come, first served.</p>
-  <button class="action" id="requestSubmit" type="submit">Send request →</button>
- </form>
-</section>
+
 <section class="waitlist-callout" id="waitlistSection">
  <div class="waitlist-top">
   <div class="waitlist-copy">
@@ -521,7 +533,7 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
 </section>
 
 <section id="coach" class="screen">
-<button class="back" type="button" data-go="home">← Back</button>
+<button class="back" type="button" data-go="booking">← Back to calendar</button>
 <div class="eyebrow">ONDECK · TEAM PORTAL</div><h1 id="dashboardHeading">Your schedule</h1>
 <p class="intro" id="dashboardIntro">Sign in to see lessons, manage available hours, and review your calendar.</p>
 <form id="coachLoginForm" class="dashboard-login">
@@ -603,7 +615,7 @@ function message(text,success=false){const el=$('message');el.textContent=text;e
 function clearMessage(){$('message').className='message';$('message').textContent=''}
 function navigate(view){document.body.classList.toggle('booking-layout',view==='booking');document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===view));clearMessage();window.scrollTo(0,0);if(view==='booking')loadAvailability();}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));
-$('brand').onclick=e=>{e.preventDefault();navigate('home')};
+$('brand').onclick=e=>{e.preventDefault();navigate('booking')};
 document.querySelectorAll('[data-duration]').forEach(b=>b.onclick=()=>{state.duration=Number(b.dataset.duration);document.querySelectorAll('[data-duration]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));state.chosen=null;state.day=null;$('bookingForm').classList.add('hidden');loadAvailability()});
 async function api(action,data=null){
  if(!API)throw Error('Booking API has not been deployed yet. Reservations cannot be submitted.');
@@ -927,7 +939,7 @@ $('requestForm').onsubmit=async e=>{
   const result=await api('timeRequest',{
    date:$('requestDate').value,period:$('requestPeriod').value,duration:Number($('requestDuration').value),
    participant:$('requestPerson').value.trim(),email:$('requestEmail').value.trim(),phone:$('requestPhone').value.trim(),
-   flexible:$('requestFlexible').checked,smsConsent:$('requestSmsConsent').checked,notes:$('requestNotes').value.trim()
+   flexible:$('requestFlexible').checked,emailConsent:$('requestSmsConsent').checked,notes:$('requestNotes').value.trim()
   });
   $('requestForm').reset();$('requestForm').classList.add('hidden');$('requestToggle').textContent='Request another time →';$('requestToggle').setAttribute('aria-expanded','false');
   message(result.message,true);
@@ -1007,8 +1019,8 @@ if(new URLSearchParams(location.search).has('unsubscribe')){
 
 renderCalendar();
 const initialPage=new URLSearchParams(location.search).get('view');
-if(['manage','booking','coach'].includes(initialPage))navigate(initialPage);
-if(initialPage==='booking'){
+if(['manage','coach'].includes(initialPage))navigate(initialPage);else navigate('booking');
+if(!initialPage||initialPage==='booking'){
  const args=new URLSearchParams(location.search),date=args.get('date'),duration=Number(args.get('duration'));
  if(duration===60||duration===90){state.duration=duration;document.querySelectorAll('[data-duration]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.duration)===duration)))}
  if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date||'')){state.day=date;const d=new Date(date+'T12:00:00');state.month=new Date(d.getFullYear(),d.getMonth(),1);loadAvailability().then(()=>{renderCalendar();renderTimes()})}
