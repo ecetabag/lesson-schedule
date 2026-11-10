@@ -192,8 +192,9 @@ async function mail(token,to,subject,body) {
  await google(token,'POST','https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{raw});
 }
 async function booking(token,data) {
- const duration=durationOf(data.duration),slotId=clean(data.slotId),kid=clean(data.kidName),email=clean(data.email).toLowerCase(),phone=clean(data.phone);
+ const duration=durationOf(data.duration),slotId=clean(data.slotId),kid=clean(data.kidName),email=clean(data.email).toLowerCase(),phone=clean(data.phone),notes=clean(data.notes);
  if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter the participant name, a valid email, and phone number.');
+ if(notes.length>500)throw fail(400,'Notes must be 500 characters or fewer.');
  const requestedDay=slotId.split('@')[0]; // Lookup actual window ID below; IDs need not be dates.
  const windows=windowsRows(await readRows(token,WINDOWS));const window=windows.find(w=>w.id===requestedDay);
  if(!window)throw fail(409,'That lesson time is no longer available.');
@@ -202,11 +203,11 @@ async function booking(token,data) {
   if(!slot)throw fail(409,'That lesson time is no longer available.');
   const bookingId=crypto.randomUUID().replaceAll('-',''),eventId=bookingId;
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  const event={id:eventId,summary:APP_TITLE+' — '+kid,location:slot.location,description:'Booking ID: '+bookingId, start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
+  const event={id:eventId,summary:APP_TITLE+' — '+kid,location:slot.location,description:'Booking ID: '+bookingId+(notes?'\n\nNotes for coach:\n'+notes:''), start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
   await google(token,'POST',calendarPath(),event,{sendUpdates:'all'});
   try{
-   const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration]];
-   await sheets(token,'POST',"'Bookings'!A:N",{values},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+   const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration,safe(notes)]];
+   await sheets(token,'POST',"'Bookings'!A:O",{values},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   }catch(e){await google(token,'DELETE',calendarPath()+'/'+eventId).catch(()=>{});throw e;}
   return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,timezone:TZ};
  });
