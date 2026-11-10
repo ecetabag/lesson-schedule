@@ -114,49 +114,51 @@ async function available(token,duration,excludeId) {
  return result.sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));
 }
 
-/* Coach login: allowlisted email + 6-digit one-time codes. */
-const coaches = () => new Set(String(process.env.COACH_EMAILS || '').split(',').map(e=>e.trim().toLowerCase()).filter(Boolean));
-const coachCodeKey = email => 'wp:coach:otp:'+sha(email);
-async function coachRequestCode(token,data,ip) {
- const email=clean(data.email).toLowerCase();
- if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)throw fail(400,'Enter a valid coach email.');
- if(!coaches().size)throw fail(503,'Coach login is not configured yet.');
- const message='If this email is an approved coach, a sign-in code has been sent.';
- const rate='wp:coach:rate:'+sha(ip+'|'+email);
- const [count]=await redis([['INCR',rate],['EXPIRE',rate,3600]]);
- if(Number(count)>5||!coaches().has(email))return {message};
- const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
- await redis([['SET',coachCodeKey(email),sha(email+':'+code),'EX',600],['DEL','wp:coach:attempt:'+sha(email)]]);
- const verification=verificationEmail(code,'coach');
- await mail(token,email,verification.subject,verification.plain,verification.html);
- return {message};
-}
-async function coachVerifyCode(data) {
- const email=clean(data.email).toLowerCase(),code=clean(data.code);
- if(!coaches().has(email)||!/^\d{6}$/.test(code))throw fail(401,'Invalid or expired code.');
- const key='wp:coach:attempt:'+sha(email);
- const [count]=await redis([['INCR',key],['EXPIRE',key,600]]);
- if(Number(count)>5)throw fail(429,'Too many attempts. Request another code.');
- const [expected]=await redis([['GET',coachCodeKey(email)]]);
- if(!expected||!compare(expected,sha(email+':'+code)))throw fail(401,'Invalid or expired code.');
+/* Server-only username/password dashboard authentication. Never return credentials to clients. */
+const dashboardUsers=Object.freeze({
+ albertponfe:{role:'coach',email:'albertponfee@gmail.com',name:'Albert'},
+ ecetabag:{role:'admin',email:'here@ecetabag.com',name:'Admin'}
+});
+async function dashboardLogin(data,ip){
+ const username=clean(data.username).toLowerCase(),password=String(data.password||'');
+ const key='wp:dashboard:login:'+sha(ip);
+ const [attempts]=await redis([['INCR',key],['EXPIRE',key,900]]);
+ if(Number(attempts)>12)throw fail(429,'Too many sign-in attempts. Try again later.');
+ const user=dashboardUsers[username];
+ const configured=process.env.DASHBOARD_PASSWORD||'';
+ const a=crypto.createHash('sha256').update(password).digest();
+ const b=crypto.createHash('sha256').update(configured).digest();
+ if(!configured||password.length>200||!user||!crypto.timingSafeEqual(a,b))throw fail(401,'Incorrect username or password.');
  const session=id();
- await redis([['DEL',coachCodeKey(email)],['SET','wp:coach:session:'+sha(session),email,'EX',28800]]);
- return {token:session,email,expiresIn:28800};
+ await redis([['SET','wp:coach:session:'+sha(session),username,'EX',28800],['DEL',key]]);
+ return {token:session,username,role:user.role,name:user.name,expiresIn:28800};
 }
-async function assertCoach(data) {
+async function dashboardActor(data){
  const session=clean(data.token);
- if(session.length!==48)throw fail(401,'Sign in as a coach first.');
- const [email]=await redis([['GET','wp:coach:session:'+sha(session)]]);
- if(!email||!coaches().has(email))throw fail(401,'Your coach session has expired. Sign in again.');
- return email;
+ if(session.length!==48)throw fail(401,'Please sign in.');
+ const [username]=await redis([['GET','wp:coach:session:'+sha(session)]]);
+ const user=dashboardUsers[username];
+ if(!user)throw fail(401,'Your session has expired. Sign in again.');
+ return {...user,username};
 }
 async function coachAvailability(token,data) {
- const coach=await assertCoach(data);
- const [windows,bookings]=await Promise.all([readRows(token,"'Slots'!A2:H"),readRows(token,BOOKINGS)]);
- return {windows:windowsRows(windows).filter(w=>w.coachEmail===coach).map(w=>({...w,bookingCount:bookingRows(bookings).filter(b=>b.window===w.id).length})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),timezone:TZ};
+ const actor=await dashboardActor(data);
+ const [rawWindows,rawBookings]=await Promise.all([readRows(token,"'Slots'!A2:H"),readRows(token,BOOKINGS)]);
+ const allWindows=windowsRows(rawWindows);
+ const permitted=actor.role==='admin'?allWindows:allWindows.filter(w=>w.coachEmail===actor.email);
+ const permittedIds=new Set(permitted.map(w=>w.id));
+ const bookings=bookingRows(rawBookings).filter(b=>actor.role==='admin'||permittedIds.has(b.window));
+ const count=new Map();
+ for(const b of bookingRows(rawBookings))count.set(b.window,(count.get(b.window)||0)+1);
+ return {
+  role:actor.role,username:actor.username,timezone:TZ,
+  windows:permitted.map(w=>({...w,bookingCount:count.get(w.id)||0})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)),
+  bookings:bookings.map(b=>({id:b.id,date:b.date,start:b.start,end:b.end,duration:b.duration,participant:b.kid,location:b.location,coachEmail:allWindows.find(w=>w.id===b.window)?.coachEmail||'',windowId:b.window})).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start))
+ };
 }
 async function coachAddWindow(token,data) {
- const coach=await assertCoach(data);
+ const actor=await dashboardActor(data);
+ const coach=actor.role==='admin'?'albertponfee@gmail.com':actor.email;
  const day=clean(data.date),start=clean(data.start),end=clean(data.end),location=COACH_LOCATIONS[clean(data.location)];
  if(!validDay(day)||!validClock(start)||!validClock(end))throw fail(400,'Choose a valid date and time.');
  if(minutes(end)<=minutes(start)||minutes(end)-minutes(start)<60||minutes(end)-minutes(start)>720)throw fail(400,'Teaching windows must be between 1 and 12 hours.');
@@ -170,21 +172,22 @@ async function coachAddWindow(token,data) {
   await sheets(token,'PUT',"'Slots'!H1",{values:[['Coach Email']]},{valueInputOption:'RAW'});
   await sheets(token,'POST',"'Slots'!A:H",{values:[[windowId,day,start,end,safe(location),'OPEN','',coach]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   try{await notifyWaitlist(token,day)}catch(e){console.error('Waitlist notification deferred',e.message)}
-  return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0}};
+  return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0,coachEmail:coach}};
  });
 }
 async function coachRemoveWindow(token,data) {
- const coach=await assertCoach(data);
+ const actor=await dashboardActor(data);
  const windowId=clean(data.windowId);
  const all=await readRows(token,"'Slots'!A2:H");
- const matched=all.find(row=>clean(row[0])===windowId && clean(row[7]).toLowerCase()===coach);
- if(!matched)throw fail(404,'Teaching window not found.');
+ const allowed=row=>clean(row[0])===windowId&&(actor.role==='admin'||clean(row[7]).toLowerCase()===actor.email);
+ const matched=all.find(allowed);
+ if(!matched)throw fail(404,'Availability window not found.');
  const day=clean(matched[1]);
  return lockDay(day,async()=>{
   const updated=await readRows(token,"'Slots'!A2:H");
-  const index=updated.findIndex(row=>clean(row[0])===windowId && clean(row[7]).toLowerCase()===coach && clean(row[5]).toUpperCase()==='OPEN');
-  if(index<0)throw fail(409,'Teaching window is no longer open.');
-  if(bookingRows(await readRows(token,BOOKINGS)).some(b=>b.window===windowId))throw fail(409,'This window has bookings. Keep it open or move the lessons first.');
+  const index=updated.findIndex(row=>allowed(row)&&clean(row[5]).toUpperCase()==='OPEN');
+  if(index<0)throw fail(409,'Availability window is no longer open.');
+  if(bookingRows(await readRows(token,BOOKINGS)).some(b=>b.window===windowId))throw fail(409,'This window has bookings. Move the lessons first.');
   await sheets(token,'PUT',"'Slots'!F"+(index+2),{values:[['CLOSED']]},{valueInputOption:'RAW'});
   return {success:true};
  });
@@ -652,8 +655,7 @@ export default async function handler(req,res){
   else if(req.method==='POST'&&action==='verifyCode')value=await verifyCode(token,body);
   else if(req.method==='POST'&&action==='manageTimes')value=await rescheduleOptions(token,body);
   else if(req.method==='POST'&&action==='reschedule')value=await reschedule(token,body);
-  else if(req.method==='POST'&&action==='coachRequestCode')value=await coachRequestCode(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
-  else if(req.method==='POST'&&action==='coachVerifyCode')value=await coachVerifyCode(body);
+  else if(req.method==='POST'&&action==='dashboardLogin')value=await dashboardLogin(body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
   else if(req.method==='POST'&&action==='coachAvailability')value=await coachAvailability(token,body);
   else if(req.method==='POST'&&action==='coachAddWindow')value=await coachAddWindow(token,body);
   else if(req.method==='POST'&&action==='coachRemoveWindow')value=await coachRemoveWindow(token,body);
