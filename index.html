@@ -279,7 +279,7 @@ footer .footer-sep{color:#a1b2a8}
 <body>
 <header><a href="#" class="brand" id="brand" aria-label="OnDeck — Waterpolo Lesson Schedule home"><img src="ondeck-logo.svg" width="188" height="30" alt="OnDeck" class="ondeck-header-logo"><span id="appBrand" class="sr-only">Waterpolo Lesson Schedule</span></a><button type="button" class="coach-link" data-go="coach">Coach login</button></header>
 <main>
-<section id="home" class="screen active"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Book a Session</h1><p class="intro" id="appSubtitle">Water polo coaching · Private lessons</p>
+<section id="home" class="screen active"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Book a Session</h1><p class="intro" id="appSubtitle">Water polo coaching</p>
 <div class="home-actions">
 <button class="choice" data-go="booking"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v6M9 16h6"/></svg></span><span class="description"><b>Book a lesson</b><span>Choose a date, time and duration</span></span><span class="arrow">→</span></button>
 <button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage a lesson</b><span>Find and reschedule your lesson</span></span><span class="arrow">→</span></button>
@@ -391,7 +391,7 @@ const APP_SETTINGS=window.APPOINTMENT_APP||{title:'Waterpolo Lesson Schedule',pa
 document.title=APP_SETTINGS.title;
 $('appBrand').textContent=APP_SETTINGS.title;
 $('appHeading').textContent=APP_SETTINGS.homeTitle || 'Book a Session';
-$('appSubtitle').textContent=APP_SETTINGS.homeSubtitle || 'Water polo coaching · Private lessons';
+$('appSubtitle').textContent=APP_SETTINGS.homeSubtitle || 'Water polo coaching';
 $('clientNameLabel').textContent=APP_SETTINGS.participantLabel;
 $('contactEmailLabel').textContent=APP_SETTINGS.contactLabel;
 document.querySelector('input[name="kidName"]').placeholder=APP_SETTINGS.participantLabel;
