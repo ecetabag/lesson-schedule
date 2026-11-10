@@ -647,17 +647,6 @@ function requestBookingLink(slot){
  url.searchParams.set('view','booking');url.searchParams.set('date',slot.date);url.searchParams.set('duration',String(slot.duration));
  return url.toString();
 }
-async function sendOnDeckSms(to,body){
- if(!process.env.TWILIO_ACCOUNT_SID||!process.env.TWILIO_AUTH_TOKEN||!process.env.TWILIO_PHONE_NUMBER)return false;
- const phone=normalizePhone(to);
- if(phone.length<10||phone.length>15)return false;
- const number='+'+(phone.length===10?'1'+phone:phone);
- const account=process.env.TWILIO_ACCOUNT_SID;
- const payload=new URLSearchParams({From:process.env.TWILIO_PHONE_NUMBER,To:number,Body:body});
- const response=await fetch('https://api.twilio.com/2010-04-01/Accounts/'+encodeURIComponent(account)+'/Messages.json',{method:'POST',headers:{Authorization:'Basic '+Buffer.from(account+':'+process.env.TWILIO_AUTH_TOKEN).toString('base64'),'Content-Type':'application/x-www-form-urlencoded'},body:payload});
- if(!response.ok)throw new Error('SMS provider returned '+response.status);
- return true;
-}
 async function notifyRequestOffer(token,request,slot){
  const dedupe='wp:request:offer:'+sha(request.id+'|'+slot.id);
  const [reserved]=await redis([['SET',dedupe,'1','NX','EX',86400*14]]);
@@ -665,9 +654,7 @@ async function notifyRequestOffer(token,request,slot){
  const link=requestBookingLink(slot);
  const textMessage='OnDeck: Albert has an opening '+slot.date+' at '+bookingFriendlyTime(slot.start)+' ('+slot.duration+' min). Book: '+link+' First come, first served. Reply STOP to opt out.';
  try{
-  let sms=false;
-  if(request.smsConsent)sms=await sendOnDeckSms(request.phone,textMessage);
-  if(!sms)await mail(token,request.email,'OnDeck: Albert has an opening', 'Hi '+request.participant+',\n\nAlbert has an opening that matches your lesson request: '+slot.date+' at '+bookingFriendlyTime(slot.start)+' ('+slot.duration+' min).\n\nBook now: '+link+'\n\nThis time is not reserved. Availability is first come, first served.');
+  await mail(token,request.email,'OnDeck: Albert has an opening', 'Hi '+request.participant+',\n\nAlbert has an opening that matches your lesson request: '+slot.date+' at '+bookingFriendlyTime(slot.start)+' ('+slot.duration+' min).\n\nBook now: '+link+'\n\nThis time is not reserved. Availability is first come, first served.');
   await sheets(token,'PUT',"'TimeRequests'!M"+request.row+":N"+request.row,{values:[[new Date().toISOString(),new Date().toISOString()]]},{valueInputOption:'RAW'});
   return true;
  }catch(e){await redis([['DEL',dedupe]]).catch(()=>{});throw e}
@@ -694,16 +681,16 @@ async function submitRequest(token,data,ip){
  if(!['morning','afternoon','after4','any'].includes(period))throw fail(400,'Choose a preferred time.');
  if(participant.length<2||participant.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter a participant name, valid email, and phone number.');
  if(notes.length>300)throw fail(400,'Notes must be under 300 characters.');
- if(data.smsConsent!==true)throw fail(400,'Please agree to receive scheduling updates by text.');
+ if(data.emailConsent!==true)throw fail(400,'Please agree to receive scheduling updates by email.');
  const [count]=await redis([['INCR','wp:requests:rate:'+sha(ip)],['EXPIRE','wp:requests:rate:'+sha(ip),3600]]);
  if(Number(count)>5)throw fail(429,'Too many requests. Try again later.');
  await ensureRequests(token);
  const existing=requestRows(await readRows(token,REQUEST_RANGE));
  if(existing.some(r=>r.status==='PENDING'&&r.email===email&&r.date===date&&r.period===period&&r.duration===duration))return {message:'Your request is already on Albert’s list.'};
  const requestId='RQ-'+crypto.randomUUID().slice(0,12).toUpperCase(),now=new Date().toISOString();
- await sheets(token,'POST',"'TimeRequests'!A:O",{values:[[requestId,now,date,period,duration,safe(participant),email,safe(phone),data.flexible?'YES':'NO','YES','PENDING','albertponfee@gmail.com','',now,safe(notes)]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+ await sheets(token,'POST',"'TimeRequests'!A:O",{values:[[requestId,now,date,period,duration,safe(participant),email,safe(phone),data.flexible?'YES':'NO','NO','PENDING','albertponfee@gmail.com','',now,safe(notes)]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
  const coachMessage='OnDeck: New request from '+participant+' for '+date+' ('+period+', '+duration+' min). Review in dashboard: '+SITE_URL+'?view=coach';
- try{if(!await sendOnDeckSms(COACH_PHONE,coachMessage))await mail(token,COACH_GUEST_EMAIL,'OnDeck: New lesson time request',coachMessage)}catch(e){console.error('Coach request notification failed',e.message)}
+ try{await mail(token,COACH_GUEST_EMAIL,'OnDeck: New lesson time request',coachMessage)}catch(e){console.error('Coach request notification failed',e.message)}
  return {message:'Request sent! Albert will review your preferred time. This is not yet a booking.'};
 }
 async function coachRequests(token,data){
