@@ -3,6 +3,8 @@
 // Google Sheet, Calendar, and approved provider emails.
 window.APPOINTMENT_APP = {
   title: 'Waterpolo Lesson Schedule',
+  homeTitle: 'Book a Session',
+  homeSubtitle: 'Water polo coaching · Private lessons',
   participantLabel: 'Participant name',
   contactLabel: 'Contact email',
   providerLabel: 'Provider',
