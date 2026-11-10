@@ -196,10 +196,10 @@ async function booking(token,data) {
  if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter the participant name, a valid email, and phone number.');
  const requestedDay=slotId.split('@')[0]; // Lookup actual window ID below; IDs need not be dates.
  const windows=windowsRows(await readRows(token,WINDOWS));const window=windows.find(w=>w.id===requestedDay);
- if(!window)throw fail(409,'That appointment is no longer available.');
+ if(!window)throw fail(409,'That lesson time is no longer available.');
  return lockDay(window.date,async()=>{
   const slot=(await available(token,duration,null)).find(s=>s.id===slotId);
-  if(!slot)throw fail(409,'That appointment is no longer available.');
+  if(!slot)throw fail(409,'That lesson time is no longer available.');
   const bookingId=crypto.randomUUID().replaceAll('-',''),eventId=bookingId;
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
   const event={id:eventId,summary:APP_TITLE+' — '+kid,location:slot.location,description:'Booking ID: '+bookingId, start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
@@ -263,7 +263,7 @@ async function reschedule(token,data){
  const booking=await authorized(token,data),requested=clean(data.slotId);
  const windows=windowsRows(await readRows(token,WINDOWS));
  const destination=windows.find(w=>requested.startsWith(w.id+'@'));
- if(!destination)throw fail(409,'That appointment is no longer available.');
+ if(!destination)throw fail(409,'That lesson time is no longer available.');
  // Lock both dates in deterministic order to prevent races and preserve the adjacency rule.
  const keys=[...new Set([booking.date,destination.date])].sort();
  const run=async i=>i===keys.length?await move():lockDay(keys[i],()=>run(i+1));
@@ -332,7 +332,7 @@ async function joinWaitlist(token,data,ip){
  const tokenValue=id();
  const entry=['WL-'+crypto.randomUUID(),new Date().toISOString(),date,duration,safe(participant),email,'WAITING','',tokenValue];
  await sheets(token,'POST',"'Waitlist'!A:I",{values:[entry]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
- return {message:'You are on the waitlist. We will email you if an appointment becomes available. A time is not reserved.'};
+ return {message:'You are on the waitlist. We will email you if a lesson time becomes available. A time is not reserved.'};
 }
 async function unsubscribeWaitlist(token,data){
  const unsubscribe=clean(data.token);
@@ -363,8 +363,8 @@ async function notifyWaitlist(token,onlyDate=null){
   const link=SITE_URL+'#booking';
   const optout=SITE_URL+'?unsubscribe='+encodeURIComponent(entry.unsubscribe);
   try{
-   if(await mailOnce(token,key,entry.email,APP_TITLE+' — appointment available',
-    'Hi '+entry.participant+',\n\nAn appointment has opened up for '+entry.date+' ('+entry.duration+' minutes).\nBook here: '+link+
+   if(await mailOnce(token,key,entry.email,APP_TITLE+' — lesson time available',
+    'Hi '+entry.participant+',\n\nA lesson time has opened up for '+entry.date+' ('+entry.duration+' minutes).\nBook here: '+link+
     '\n\nThis is a notification, not a reservation. Times are first come, first served.\n\nStop these alerts: '+optout,86400*14)){
     await sheets(token,'PUT',"'Waitlist'!G"+entry.row+':H'+entry.row,{values:[['NOTIFIED',new Date().toISOString()]]},{valueInputOption:'RAW'});
     sent++;
@@ -380,8 +380,8 @@ async function sendDailyReminders(token){
  for(const b of rows.slice(0,50)){
   const key='wp:reminder:'+sha(b.id+'|'+b.date);
   try{
-   if(await mailOnce(token,key,b.email,APP_TITLE+' — appointment reminder',
-    'Reminder: '+b.kid+' has an appointment tomorrow ('+b.date+') at '+b.start+' ('+b.duration+' minutes).\nLocation: '+b.location+
+   if(await mailOnce(token,key,b.email,APP_TITLE+' — lesson reminder',
+    'Reminder: '+b.kid+' has a lesson tomorrow ('+b.date+') at '+b.start+' ('+b.duration+' minutes).\nLocation: '+b.location+
     '\n\nTo manage your booking, visit '+SITE_URL+'\n\nTimes are in '+TZ+'.',86400*5))sent++;
   }catch(e){console.error('Reminder failed',b.id,e.message)}
  }
