@@ -168,6 +168,33 @@ footer .footer-sep{color:#a1b2a8}
  .waitlist-callout .waitlist-copy p{font-size:12px}
  .waitlist-callout #waitlistForm{margin-top:15px;padding-top:15px}
 }
+
+/* iOS Safari date inputs otherwise render taller than other form fields. */
+#waitlistDate{
+ display:block;
+ width:100%;
+ height:46px;
+ min-height:46px;
+ max-height:46px;
+ box-sizing:border-box;
+ padding:0 12px;
+ border-radius:7px;
+ font-size:16px;
+ line-height:normal;
+ text-align:left;
+ -webkit-appearance:none;
+ appearance:none;
+}
+#waitlistDate::-webkit-date-and-time-value{
+ min-height:0;
+ height:auto;
+ text-align:left;
+}
+#waitlistDate::-webkit-datetime-edit{
+ padding:0;
+ margin:0;
+}
+
 </style>
 </head>
 <body>
