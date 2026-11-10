@@ -28,7 +28,7 @@ function eventDetails(bookingId,notes,location) {
    '\nParking location provided by coach: '+COACH_MAP_LINK;
 }
 
-const BOOKINGS = "'Bookings'!A2:N";
+const BOOKINGS = "'Bookings'!A2:O";
 const isSameOrigin = (origin,req) => { try { const u=new URL(origin);return u.protocol==='https:' && u.host===req.headers.host; }catch{return false;} };
 const WINDOWS = "'Slots'!A2:G";
 
@@ -69,7 +69,7 @@ async function google(token,method,path,body,params) {
 }
 const sheets=(token,method,range,body,params) => google(token,method,'spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values/'+encodeURIComponent(range)+(method==='POST'?':append':method==='PUT'?'':'') ,body,params);
 async function readRows(token,range){let v=await sheets(token,'GET',range);return v.values||[];}
-function bookingRows(data){return data.map((a,i)=>({row:i+2,id:a[0]||'',window:a[2]||'',date:a[3]||'',start:a[4]||'',end:a[5]||'',kid:a[6]||'',email:a[7]||'',phone:a[8]||'',location:a[9]||'',event:a[10]||'',status:a[11]||'',duration:Number(a[13]||30)})).filter(b=>b.id&&b.status==='CONFIRMED');}
+function bookingRows(data){return data.map((a,i)=>({row:i+2,id:a[0]||'',window:a[2]||'',date:a[3]||'',start:a[4]||'',end:a[5]||'',kid:a[6]||'',email:a[7]||'',phone:a[8]||'',location:a[9]||'',event:a[10]||'',status:a[11]||'',duration:Number(a[13]||30),notes:clean(a[14])})).filter(b=>b.id&&b.status==='CONFIRMED');}
 function windowsRows(data){return data.map(a=>({id:clean(a[0]),date:clean(a[1]),start:clean(a[2]),end:clean(a[3]),location:clean(a[4])||'Location to be confirmed',status:clean(a[5]).toUpperCase(),legacy:clean(a[6]),coachEmail:clean(a[7]).toLowerCase()})).filter(w=>w.id && w.status==='OPEN' && !w.legacy && validDay(w.date) && validClock(w.start) && validClock(w.end) && minutes(w.end)>minutes(w.start));}
 function offsetFor(day) {
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,timeZoneName:'shortOffset'}).formatToParts(new Date(day+'T12:00:00Z'));
@@ -268,7 +268,7 @@ function designedEmail(title,lead,details,links,closing,badge){
  '<tr><td style="padding:17px 28px;background:#f5f8f5;color:#87968c;font-size:11px;">OnDeck · Scheduling pages, made for you.</td></tr>'+
  '</table></body></html>';
 }
-function bookingEmailTemplates(b){
+function bookingEmailTemplates(b,updated=false){
  const date=bookingFriendlyDate(b.date),time=bookingFriendlyTime(b.start)+' – '+bookingFriendlyTime(b.end);
  const directions=directionsFor(b.location),notes=b.notes||'';
  const baseRows=emailDetailRow('Date',date)+emailDetailRow('Time',time)+
@@ -290,16 +290,16 @@ function bookingEmailTemplates(b){
   (notes?'\nNotes: '+notes:'')+
   '\n\nDirections: '+directions+'\nParking location provided by coach: '+COACH_MAP_LINK+
   '\n\nBooking ID: '+b.bookingId+'\nOpen bookings: '+BOOKING_HOME_LINK;
- const clientHtml=designedEmail('Your private lesson is booked!',
-  'Thank you for booking a private water polo lesson. Here are your details:',
+ const clientHtml=designedEmail(updated?'Your lesson details have been updated':'Your private lesson is booked!',
+  updated?'Your private water polo lesson has been updated. Here are the latest details:':'Thank you for booking a private water polo lesson. Here are your details:',
   clientRows,[{text:'Manage your lesson',url:BOOKING_MANAGE_LINK},{text:'Get directions',url:directions,secondary:true}],
-  'Need to change anything? Use the Manage lesson button above.<br>Questions? Text Ponfe at <a href="sms:+15103567916" style="color:#24543d;font-weight:700;">(510) 356-7916</a>.<br>See you at the pool!', '✓ CONFIRMED');
- const coachHtml=designedEmail('New private lesson booked',
-  'A new water polo lesson has been confirmed for '+date+'.',
+  'Need to change anything? Use the Manage lesson button above.<br>Questions? Text Ponfe at <a href="sms:+15103567916" style="color:#24543d;font-weight:700;">(510) 356-7916</a>.<br>See you at the pool!', updated?'✓ UPDATED':'✓ CONFIRMED');
+ const coachHtml=designedEmail(updated?'Private lesson information updated':'New private lesson booked',
+  updated?'The details for the '+date+' lesson were updated.':'A new water polo lesson has been confirmed for '+date+'.',
   coachRows,[{text:'View booking page',url:BOOKING_HOME_LINK},{text:'Directions',url:directions,secondary:true}],
-  'Booking ID: '+escapeEmailHtml(b.bookingId)+'<br>Coach phone: (510) 356-7916.', 'NEW BOOKING');
- return {client:{subject:'Your private water polo lesson is confirmed',plain:clientPlain,html:clientHtml},
- coach:{subject:'New private lesson booked: '+date,plain:coachPlain,html:coachHtml}};
+  'Booking ID: '+escapeEmailHtml(b.bookingId)+'<br>Coach phone: (510) 356-7916.', updated?'BOOKING UPDATED':'NEW BOOKING');
+ return {client:{subject:updated?'Your private water polo lesson — updated details':'Your private water polo lesson is confirmed',plain:clientPlain,html:clientHtml},
+ coach:{subject:(updated?'Private lesson updated: ':'New private lesson booked: ')+date,plain:coachPlain,html:coachHtml}};
 }
 
 
@@ -362,9 +362,64 @@ async function booking(token,data) {
   if(results[0].status==='rejected')console.error('Client booking email failed for',bookingId,results[0].reason?.message);
   if(results[1].status==='rejected')console.error('Coach booking email failed for',bookingId,results[1].reason?.message);
   if(results[2].status==='rejected')console.error('Additional booking alert email failed for',bookingId,results[2].reason?.message);
-  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ,confirmationEmailSent:results[0].status==='fulfilled',coachEmailSent:results[1].status==='fulfilled'};
+  let editToken=null;
+  try{const key=id();await redis([['SET','wp:booking-edit:'+sha(key),bookingId,'EX',1800]]);editToken=key;}
+  catch(e){console.error('Could not issue post-booking edit session',bookingId,e.message)}
+  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ,editToken,confirmationEmailSent:results[0].status==='fulfilled',coachEmailSent:results[1].status==='fulfilled'};
  });
 }
+
+async function editBooking(token,data){
+ // Only the just-booked browser receives this random token, valid for 30 minutes.
+ const bookingId=clean(data.bookingId),editToken=clean(data.editToken);
+ if(!/^[a-f0-9]{32}$/.test(bookingId)||!/^[a-f0-9]{48}$/.test(editToken))
+  throw fail(401,'Editing session expired. Please use Manage booking.');
+ const [granted]=await redis([['GET','wp:booking-edit:'+sha(editToken)]]);
+ if(!granted||!compare(granted,bookingId))throw fail(401,'Editing session expired. Please use Manage booking.');
+ const kid=clean(data.kidName),email=clean(data.email).toLowerCase(),phone=clean(data.phone),notes=clean(data.notes);
+ if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))
+  throw fail(400,'Enter a participant name, valid email, and phone number.');
+ if(notes.length>500)throw fail(400,'Notes must be 500 characters or fewer.');
+ const all=bookingRows(await readRows(token,BOOKINGS)),booking=all.find(b=>b.id===bookingId);
+ if(!booking)throw fail(404,'Booking not found.');
+ if(instant(booking.date,booking.start).getTime()<=Date.now())
+  throw fail(409,'This lesson has already started. Contact your coach to make changes.');
+ const updated=await lockDay(booking.date,async()=>{
+  const current=bookingRows(await readRows(token,BOOKINGS)).find(b=>b.id===bookingId);
+  if(!current)throw fail(404,'Booking not found.');
+  if(instant(current.date,current.start).getTime()<=Date.now())throw fail(409,'This lesson has already started.');
+  const eventUrl=calendarPath()+'/'+encodeURIComponent(current.event);
+  const before=await google(token,'GET',eventUrl);
+  await google(token,'PATCH',eventUrl,{
+   attendees:[...new Set([email,COACH_GUEST_EMAIL])].map(address=>({email:address})),
+   description:eventDetails(current.id,notes,current.location)
+  },{sendUpdates:'all'});
+  try{
+   await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values:batchUpdate',{
+    valueInputOption:'RAW',data:[
+     {range:"'Bookings'!G"+current.row+':I'+current.row,values:[[safe(kid),email,safe(phone)]]},
+     {range:"'Bookings'!M"+current.row,values:[[new Date().toISOString()]]},
+     {range:"'Bookings'!O"+current.row,values:[[safe(notes)]]}
+    ]
+   });
+  }catch(e){
+   await google(token,'PATCH',eventUrl,{attendees:before.attendees,description:before.description},{sendUpdates:'all'}).catch(()=>{});
+   throw e;
+  }
+  return {bookingId:current.id,kid,email,phone,notes,date:current.date,start:current.start,end:current.end,duration:current.duration,location:current.location};
+ });
+ const templates=bookingEmailTemplates(updated,true);
+ const sent=await Promise.allSettled([
+  mail(token,updated.email,templates.client.subject,templates.client.plain,templates.client.html),
+  mail(token,COACH_GUEST_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html),
+  mail(token,BOOKING_ALERT_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html)
+ ]);
+ for(let i=0;i<sent.length;i++)if(sent[i].status==='rejected')
+  console.error('Booking update notification failed for',bookingId,'recipient',i,sent[i].reason?.message);
+ return {booking:{bookingId:updated.bookingId,kidName:updated.kid,email:updated.email,phone:updated.phone,notes:updated.notes},
+  confirmationEmailSent:sent[0].status==='fulfilled'};
+}
+
 async function findBookings(token,phone,kid) {
  const rows=bookingRows(await readRows(token,BOOKINGS));
  return rows.filter(b=>normalizePhone(b.phone)===normalizePhone(phone)&&normalizeKid(b.kid)===normalizeKid(kid)&&instant(b.date,b.start).getTime()>Date.now());
@@ -592,6 +647,7 @@ export default async function handler(req,res){
    if(Number(attempts)>12)throw fail(429,'Too many booking attempts. Please try again later.');
    value=await booking(token,body);
   }
+  else if(req.method==='POST'&&action==='editBooking')value=await editBooking(token,body);
   else if(req.method==='POST'&&action==='requestCode')value=await requestCode(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
   else if(req.method==='POST'&&action==='verifyCode')value=await verifyCode(token,body);
   else if(req.method==='POST'&&action==='manageTimes')value=await rescheduleOptions(token,body);
