@@ -172,6 +172,7 @@ async function coachAddWindow(token,data) {
   await sheets(token,'PUT',"'Slots'!H1",{values:[['Coach Email']]},{valueInputOption:'RAW'});
   await sheets(token,'POST',"'Slots'!A:H",{values:[[windowId,day,start,end,safe(location),'OPEN','',coach]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   try{await notifyWaitlist(token,day)}catch(e){console.error('Waitlist notification deferred',e.message)}
+  try{await matchRequests(token,day)}catch(e){console.error('Request matching deferred',e.message)}
   return {window:{id:windowId,date:day,start,end,location,status:'OPEN',bookingCount:0,coachEmail:coach}};
  });
 }
@@ -619,11 +620,124 @@ async function promptCoaches(token){
  }
  return {sent,coachesChecked:coachesList.length};
 }
+
+/* OnDeck time requests; no offered time is ever held or reserved. */
+const REQUEST_RANGE="'TimeRequests'!A2:O";
+async function ensureRequests(token){
+ const meta=await google(token,'GET','spreadsheets/'+encodeURIComponent(SHEET_ID),undefined,{fields:'sheets.properties.title'});
+ if(!(meta.sheets||[]).some(s=>s.properties.title==='TimeRequests')){
+  try{await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+':batchUpdate',{requests:[{addSheet:{properties:{title:'TimeRequests',gridProperties:{frozenRowCount:1}}}}]})}
+  catch(e){const again=await google(token,'GET','spreadsheets/'+encodeURIComponent(SHEET_ID),undefined,{fields:'sheets.properties.title'});if(!(again.sheets||[]).some(s=>s.properties.title==='TimeRequests'))throw e}
+ }
+ await sheets(token,'PUT',"'TimeRequests'!A1:O1",{values:[['Request ID','Created','Requested date','Period','Duration','Participant','Parent email','Phone','Flexible','SMS consent','Status','Coach Email','Last offered at','Last updated','Notes']]},{valueInputOption:'RAW'});
+}
+function requestRows(data){
+ return data.map((a,i)=>({row:i+2,id:clean(a[0]),created:clean(a[1]),date:clean(a[2]),period:clean(a[3]),duration:Number(a[4]),participant:clean(a[5]),email:clean(a[6]),phone:clean(a[7]),flexible:clean(a[8])==='YES',smsConsent:clean(a[9])==='YES',status:clean(a[10]),coachEmail:clean(a[11]).toLowerCase(),offeredAt:clean(a[12]),updated:clean(a[13]),notes:clean(a[14])})).filter(r=>r.id);
+}
+function requestMatchesSlot(request,slot){
+ if(request.duration!==slot.duration)return false;
+ const requested=new Date(request.date+'T12:00:00Z'),candidate=new Date(slot.date+'T12:00:00Z');
+ const distance=Math.round((candidate-requested)/86400000);
+ if(distance!==0&&(!request.flexible||Math.abs(distance)>3))return false;
+ const t=minutes(slot.start);
+ return request.period==='any'||request.period==='morning'&&t>=480&&t<720||request.period==='afternoon'&&t>=720&&t<960||request.period==='after4'&&t>=960;
+}
+function requestBookingLink(slot){
+ const url=new URL(SITE_URL);
+ url.searchParams.set('view','booking');url.searchParams.set('date',slot.date);url.searchParams.set('duration',String(slot.duration));
+ return url.toString();
+}
+async function sendOnDeckSms(to,body){
+ if(!process.env.TWILIO_ACCOUNT_SID||!process.env.TWILIO_AUTH_TOKEN||!process.env.TWILIO_PHONE_NUMBER)return false;
+ const phone=normalizePhone(to);
+ if(phone.length<10||phone.length>15)return false;
+ const number='+'+(phone.length===10?'1'+phone:phone);
+ const account=process.env.TWILIO_ACCOUNT_SID;
+ const payload=new URLSearchParams({From:process.env.TWILIO_PHONE_NUMBER,To:number,Body:body});
+ const response=await fetch('https://api.twilio.com/2010-04-01/Accounts/'+encodeURIComponent(account)+'/Messages.json',{method:'POST',headers:{Authorization:'Basic '+Buffer.from(account+':'+process.env.TWILIO_AUTH_TOKEN).toString('base64'),'Content-Type':'application/x-www-form-urlencoded'},body:payload});
+ if(!response.ok)throw new Error('SMS provider returned '+response.status);
+ return true;
+}
+async function notifyRequestOffer(token,request,slot){
+ const dedupe='wp:request:offer:'+sha(request.id+'|'+slot.id);
+ const [reserved]=await redis([['SET',dedupe,'1','NX','EX',86400*14]]);
+ if(reserved!=='OK')return false;
+ const link=requestBookingLink(slot);
+ const textMessage='OnDeck: Albert has an opening '+slot.date+' at '+bookingFriendlyTime(slot.start)+' ('+slot.duration+' min). Book: '+link+' First come, first served. Reply STOP to opt out.';
+ try{
+  let sms=false;
+  if(request.smsConsent)sms=await sendOnDeckSms(request.phone,textMessage);
+  if(!sms)await mail(token,request.email,'OnDeck: Albert has an opening', 'Hi '+request.participant+',\n\nAlbert has an opening that matches your lesson request: '+slot.date+' at '+bookingFriendlyTime(slot.start)+' ('+slot.duration+' min).\n\nBook now: '+link+'\n\nThis time is not reserved. Availability is first come, first served.');
+  await sheets(token,'PUT',"'TimeRequests'!M"+request.row+":N"+request.row,{values:[[new Date().toISOString(),new Date().toISOString()]]},{valueInputOption:'RAW'});
+  return true;
+ }catch(e){await redis([['DEL',dedupe]]).catch(()=>{});throw e}
+}
+async function matchRequests(token,onlyDate=null){
+ await ensureRequests(token);
+ const now=Date.now();
+ const pending=requestRows(await readRows(token,REQUEST_RANGE)).filter(r=>r.status==='PENDING'&&(!onlyDate||r.flexible||r.date===onlyDate)&&instant(r.date,'23:59').getTime()+3*86400000>now).slice(0,30);
+ if(!pending.length)return {matched:0,checked:0};
+ const availableByDuration=new Map();let matched=0;
+ for(const req of pending){
+  try{
+   if(!availableByDuration.has(req.duration))availableByDuration.set(req.duration,await available(token,req.duration,null));
+   const match=availableByDuration.get(req.duration).find(s=>requestMatchesSlot(req,s)&&(onlyDate===null||s.date===onlyDate));
+   if(match&&await notifyRequestOffer(token,req,match))matched++;
+  }catch(e){console.error('Time request match failed',req.id,e.message)}
+ }
+ return {matched,checked:pending.length};
+}
+async function submitRequest(token,data,ip){
+ const date=clean(data.date),period=clean(data.period),duration=durationOf(data.duration);
+ const participant=clean(data.participant),email=clean(data.email).toLowerCase(),phone=clean(data.phone),notes=clean(data.notes);
+ if(!validDay(date)||instant(date,'23:59').getTime()<Date.now()||instant(date,'00:00').getTime()>Date.now()+120*86400000)throw fail(400,'Choose a future date within 120 days.');
+ if(!['morning','afternoon','after4','any'].includes(period))throw fail(400,'Choose a preferred time.');
+ if(participant.length<2||participant.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter a participant name, valid email, and phone number.');
+ if(notes.length>300)throw fail(400,'Notes must be under 300 characters.');
+ if(data.smsConsent!==true)throw fail(400,'Please agree to receive scheduling updates by text.');
+ const [count]=await redis([['INCR','wp:requests:rate:'+sha(ip)],['EXPIRE','wp:requests:rate:'+sha(ip),3600]]);
+ if(Number(count)>5)throw fail(429,'Too many requests. Try again later.');
+ await ensureRequests(token);
+ const existing=requestRows(await readRows(token,REQUEST_RANGE));
+ if(existing.some(r=>r.status==='PENDING'&&r.email===email&&r.date===date&&r.period===period&&r.duration===duration))return {message:'Your request is already on Albert’s list.'};
+ const requestId='RQ-'+crypto.randomUUID().slice(0,12).toUpperCase(),now=new Date().toISOString();
+ await sheets(token,'POST',"'TimeRequests'!A:O",{values:[[requestId,now,date,period,duration,safe(participant),email,safe(phone),data.flexible?'YES':'NO','YES','PENDING','albertponfee@gmail.com','',now,safe(notes)]]},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
+ const coachMessage='OnDeck: New request from '+participant+' for '+date+' ('+period+', '+duration+' min). Review in dashboard: '+SITE_URL+'?view=coach';
+ try{if(!await sendOnDeckSms(COACH_PHONE,coachMessage))await mail(token,COACH_GUEST_EMAIL,'OnDeck: New lesson time request',coachMessage)}catch(e){console.error('Coach request notification failed',e.message)}
+ return {message:'Request sent! Albert will review your preferred time. This is not yet a booking.'};
+}
+async function coachRequests(token,data){
+ const actor=await dashboardActor(data);await ensureRequests(token);
+ const rows=requestRows(await readRows(token,REQUEST_RANGE));
+ return {requests:rows.filter(r=>actor.role==='admin'||r.coachEmail===actor.email).map(r=>({id:r.id,date:r.date,period:r.period,duration:r.duration,participant:r.participant,email:r.email,phone:r.phone,flexible:r.flexible,status:r.status,notes:r.notes,offeredAt:r.offeredAt})).sort((a,b)=>a.date.localeCompare(b.date))};
+}
+async function coachOfferRequest(token,data){
+ const actor=await dashboardActor(data),requestId=clean(data.requestId),slotId=clean(data.slotId);
+ await ensureRequests(token);
+ const request=requestRows(await readRows(token,REQUEST_RANGE)).find(r=>r.id===requestId&&(actor.role==='admin'||r.coachEmail===actor.email));
+ if(!request||request.status!=='PENDING')throw fail(404,'Pending request not found.');
+ const options=await available(token,request.duration,null);
+ const slot=options.find(s=>s.id===slotId);
+ if(!slot)throw fail(409,'That time is not available anymore.');
+ if(!requestMatchesSlot(request,slot))throw fail(400,'Choose a time matching this request.');
+ const sent=await notifyRequestOffer(token,request,slot);
+ return {sent,message:sent?'Offer sent. The time remains publicly bookable.':'You already sent this offer.'};
+}
+async function coachCloseRequest(token,data){
+ const actor=await dashboardActor(data),requestId=clean(data.requestId);
+ if(!['DECLINED','CLOSED'].includes(data.status))throw fail(400,'Invalid request status.');
+ await ensureRequests(token);
+ const found=requestRows(await readRows(token,REQUEST_RANGE)).find(r=>r.id===requestId&&(actor.role==='admin'||r.coachEmail===actor.email));
+ if(!found)throw fail(404,'Request not found.');
+ await sheets(token,'PUT',"'TimeRequests'!K"+found.row,{values:[[data.status]]},{valueInputOption:'RAW'});
+ return {success:true};
+}
 async function dailyAutomation(token){
  const reminders=await sendDailyReminders(token);
  const coaches=await promptCoaches(token);
  const waitlist=await notifyWaitlist(token);
- return {ok:true,reminders,coaches,waitlist};
+ const requests=await matchRequests(token);
+ return {ok:true,reminders,coaches,waitlist,requests};
 }
 
 export default async function handler(req,res){
@@ -660,6 +774,10 @@ export default async function handler(req,res){
   else if(req.method==='POST'&&action==='coachAddWindow')value=await coachAddWindow(token,body);
   else if(req.method==='POST'&&action==='coachRemoveWindow')value=await coachRemoveWindow(token,body);
   else if(req.method==='POST'&&action==='coachSignOut')value=await coachSignOut(body);
+  else if(req.method==='POST'&&action==='timeRequest')value=await submitRequest(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
+  else if(req.method==='POST'&&action==='coachRequests')value=await coachRequests(token,body);
+  else if(req.method==='POST'&&action==='coachOfferRequest')value=await coachOfferRequest(token,body);
+  else if(req.method==='POST'&&action==='coachCloseRequest')value=await coachCloseRequest(token,body);
   else if(req.method==='POST'&&action==='waitlistJoin')value=await joinWaitlist(token,body,String(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0]);
   else if(req.method==='POST'&&action==='waitlistLeave')value=await unsubscribeWaitlist(token,body);
   else throw fail(404,'Unknown API endpoint.');
