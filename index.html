@@ -379,6 +379,35 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
 .dashboard-add .action{margin-top:15px}
 #coachWindows{display:grid;gap:9px}
 @media(max-width:680px){.coach-cal-day{min-height:79px;padding:5px 3px;gap:3px}.cal-event-pill{font-size:8px;padding:4px 3px}.cal-day-number{font-size:11px;width:22px;height:22px}.dashboard-calendar-top h2{font-size:22px}.dashboard-calendar-nav button{padding:6px 9px}.dashboard-event-row .event-time{width:75px;font-size:11px}.dashboard-add summary{padding:15px}.dashboard-add-caption{display:none}}
+
+/* Hybrid booking requests */
+.request-callout{border:1px solid #d6e8dd;border-radius:15px;background:linear-gradient(130deg,#f4faf5,#fff);padding:24px;margin:30px 0 18px}
+.request-callout .eyebrow{margin-bottom:8px;color:#628675}
+.request-callout h3{font-size:21px;letter-spacing:-.035em;margin:0 0 7px}
+.request-callout p{font-size:12px;line-height:1.7;color:#748e7d;max-width:530px;margin:0}
+.request-choices{display:flex;gap:10px;align-items:center;margin-top:17px;flex-wrap:wrap}
+.request-primary,.request-text{padding:12px 17px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer}
+.request-primary{background:var(--brand-bg);color:#fff;border:1px solid var(--brand-bg)}
+.request-text{background:#fff;border:1px solid #d2e3d8;color:#2e5943}
+.request-form{border-top:1px solid #dcebe1;margin-top:22px;padding-top:10px}
+.request-form .label{margin-top:15px}
+.request-form .consent{margin-top:13px}
+.request-form textarea{width:100%;resize:vertical}
+.request-form .action{margin-top:16px}
+.dashboard-requests{padding:20px;margin-bottom:26px;border:1px solid #d8e6dc;background:#f5faf5;border-radius:13px}
+.dashboard-requests .coach-subtitle{margin-top:0}
+.dashboard-requests .coach-subtitle h2{display:flex;align-items:center;gap:8px}
+.request-count{font-size:11px;background:#d7eadd;color:#2c6748;padding:4px 9px;border-radius:999px}
+.coach-request-list{display:grid;gap:9px;margin-top:16px}
+.coach-request-card{background:#fff;border:1px solid #e1e9e3;border-radius:10px;padding:15px;display:grid;gap:8px}
+.coach-request-card .request-meta{font-size:12px;color:#6f8978;line-height:1.6}
+.coach-request-card .request-notes{font-size:12px;color:#5f7868;font-style:italic}
+.coach-request-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.coach-request-actions select{flex:1;min-width:175px;max-width:410px;font-size:12px}
+.coach-request-actions button{padding:9px 13px;border-radius:8px;border:1px solid #bdd5c4;color:#25523b;font-size:12px;font-weight:700;background:#fff;cursor:pointer}
+.coach-request-actions .offer-btn{background:var(--brand-bg);color:#fff;border-color:var(--brand-bg)}
+.coach-request-actions button:disabled{opacity:.5;cursor:wait}
+@media(max-width:480px){.request-callout{padding:17px}.dashboard-requests{padding:14px}.coach-request-actions select{width:100%;max-width:none}}
 </style>
 </head>
 <body>
@@ -405,6 +434,21 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
   <div id="times" class="time-grid"></div>
  </aside>
 </div>
+<section class="request-callout">
+ <div class="request-callout-heading"><div><div class="eyebrow">PERSONAL SCHEDULING</div><h3>Need a different time?</h3><p>Tell Albert what works for you. He can offer a time, or OnDeck can let you know when one opens.</p></div></div>
+ <div class="request-choices"><button type="button" id="requestToggle" class="request-primary" aria-expanded="false" aria-controls="requestForm">Request another time →</button><a class="request-text" href="sms:+15103567916">Text Albert</a></div>
+ <form id="requestForm" class="hidden request-form">
+  <div class="two"><div><label class="label" for="requestDate">Preferred date</label><input id="requestDate" type="date" required></div><div><label class="label" for="requestPeriod">Preferred time</label><select id="requestPeriod" required><option value="morning">Morning · 8 AM–12 PM</option><option value="afternoon">Afternoon · 12–4 PM</option><option value="after4" selected>After 4 PM</option><option value="any">Any time</option></select></div></div>
+  <label class="label" for="requestDuration">Lesson length</label><select id="requestDuration"><option value="60">60 minutes</option><option value="90">90 minutes</option></select>
+  <div class="two"><div><label class="label" for="requestPerson">Participant name</label><input id="requestPerson" required maxlength="100" placeholder="Student name"></div><div><label class="label" for="requestEmail">Email</label><input id="requestEmail" type="email" required placeholder="you@example.com"></div></div>
+  <label class="label" for="requestPhone">Phone</label><input id="requestPhone" type="tel" required placeholder="+1 (555) 000-0000">
+  <label class="consent"><input type="checkbox" id="requestFlexible"> <span>Nearby days also work (within 3 days)</span></label>
+  <label class="label" for="requestNotes">Notes (optional)</label><textarea id="requestNotes" rows="2" maxlength="300" placeholder="Anything Albert should know?"></textarea>
+  <label class="consent"><input type="checkbox" id="requestSmsConsent" required><span>I agree to receive scheduling notifications by text from OnDeck. Message/data rates may apply. Reply STOP to opt out.</span></label>
+  <p class="small">Submitting a request does not book or reserve a lesson. Offered times are first come, first served.</p>
+  <button class="action" id="requestSubmit" type="submit">Send request →</button>
+ </form>
+</section>
 <section class="waitlist-callout" id="waitlistSection">
  <div class="waitlist-top">
   <div class="waitlist-copy">
@@ -489,6 +533,11 @@ body:has(#coach.active) main{max-width:1080px;padding-top:43px}
 </form>
 <div id="coachDashboard" class="hidden">
  <div class="dashboard-topline"><div><span class="portal-chip" id="dashboardRole">COACH</span><p class="dashboard-welcome" id="dashboardWelcome"></p></div><button id="coachLogout" type="button" class="dashboard-outline">Sign out</button></div>
+ <div class="dashboard-requests" id="dashboardRequests">
+ <div class="coach-subtitle"><h2>Time requests <span id="requestCount" class="request-count">0</span></h2><button id="requestRefresh" type="button">Refresh requests</button></div>
+ <p class="small">Review families' preferred times. Offers are never reserved and are always first come, first served.</p>
+ <div id="coachRequestList" class="coach-request-list" aria-live="polite"></div>
+</div>
  <div class="dashboard-calendar-top">
   <div><div class="eyebrow">SCHEDULE</div><h2 id="coachMonthHeading">Calendar</h2></div>
   <div class="dashboard-calendar-nav"><button type="button" id="coachPrevMonth" aria-label="Previous month">‹</button><button type="button" id="coachToday">Today</button><button type="button" id="coachNextMonth" aria-label="Next month">›</button></div>
@@ -840,7 +889,7 @@ $('coachLoginForm').onsubmit=async e=>{
   $('coachLoginForm').classList.add('hidden');$('coachDashboard').classList.remove('hidden');
   $('dashboardHeading').textContent=r.role==='admin'?'Team calendar':'Coach calendar';
   $('dashboardIntro').classList.add('hidden');
-  await coachLoadWindows();message('Welcome to OnDeck, '+r.name+'.',true);
+  await coachLoadWindows();await coachLoadRequests();message('Welcome to OnDeck, '+r.name+'.',true);
  }catch(err){message(err.message)}finally{btn.disabled=false}
 };
 $('coachAddForm').onsubmit=async e=>{
@@ -849,7 +898,7 @@ $('coachAddForm').onsubmit=async e=>{
   const r=await api('coachAddWindow',coachPayload({date:$('coachDate').value,start:$('coachStart').value,end:$('coachEnd').value,location:$('coachLocation').value.trim()}));
   coachSchedule.day=r.window.date;
   const d=new Date(r.window.date+'T12:00:00');coachSchedule.month=new Date(d.getFullYear(),d.getMonth(),1);
-  message('Availability added for '+niceDate(r.window.date)+'.',true);await coachLoadWindows();
+  message('Availability added for '+niceDate(r.window.date)+'.',true);await coachLoadWindows();await coachLoadRequests();
  }catch(err){message(err.message)}finally{btn.disabled=false}
 };
 $('coachRefresh').onclick=()=>coachLoadWindows();
@@ -862,6 +911,76 @@ $('coachLogout').onclick=async()=>{
 };
 $('coachDate').value=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
 $('coachDate').min=$('coachDate').value;
+
+
+/* Parent time-request flow. */
+$('requestToggle').onclick=()=>{
+ const open=$('requestForm').classList.toggle('hidden')===false;
+ $('requestToggle').setAttribute('aria-expanded',String(open));
+ $('requestToggle').textContent=open?'Close request':'Request another time →';
+ if(open){$('requestDate').value=state.day||dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());$('requestDuration').value=String(state.duration)}
+};
+$('requestDate').min=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+$('requestForm').onsubmit=async e=>{
+ e.preventDefault();clearMessage();const button=$('requestSubmit');button.disabled=true;
+ try{
+  const result=await api('timeRequest',{
+   date:$('requestDate').value,period:$('requestPeriod').value,duration:Number($('requestDuration').value),
+   participant:$('requestPerson').value.trim(),email:$('requestEmail').value.trim(),phone:$('requestPhone').value.trim(),
+   flexible:$('requestFlexible').checked,smsConsent:$('requestSmsConsent').checked,notes:$('requestNotes').value.trim()
+  });
+  $('requestForm').reset();$('requestForm').classList.add('hidden');$('requestToggle').textContent='Request another time →';$('requestToggle').setAttribute('aria-expanded','false');
+  message(result.message,true);
+ }catch(error){message(error.message)}finally{button.disabled=false}
+};
+async function coachLoadRequests(){
+ if(!state.coachToken)return;
+ const host=$('coachRequestList');host.textContent='Loading requests…';
+ try{
+  const result=await api('coachRequests',coachPayload());host.replaceChildren();
+  const requests=(result.requests||[]).filter(r=>r.status==='PENDING');
+  $('requestCount').textContent=requests.length;
+  if(!requests.length){const item=document.createElement('div');item.className='event-empty';item.textContent='No pending time requests.';host.append(item);return}
+  for(const req of requests){
+   const card=document.createElement('div');card.className='coach-request-card';
+   const title=document.createElement('strong');title.textContent=req.participant+' · '+req.duration+' min';
+   const meta=document.createElement('div');meta.className='request-meta';
+   meta.textContent=niceDate(req.date)+' · '+({morning:'Morning (8 AM–12 PM)',afternoon:'Afternoon (12–4 PM)',after4:'After 4 PM',any:'Any time'}[req.period]||req.period)+(req.flexible?' · ±3 days':'')+' · '+req.email+' · '+req.phone;
+   card.append(title,meta);
+   if(req.notes){const note=document.createElement('div');note.className='request-notes';note.textContent=req.notes;card.append(note)}
+   const controls=document.createElement('div');controls.className='coach-request-actions';
+   const select=document.createElement('select');select.setAttribute('aria-label','Available times for '+req.participant);
+   const heading=document.createElement('option');heading.value='';heading.textContent='Choose a matching available time';select.append(heading);
+   const matches=(coachSchedule.windows||[]).flatMap(w=>{
+    if(w.date!==req.date&&(!req.flexible||Math.abs((new Date(w.date+'T12:00:00')-new Date(req.date+'T12:00:00'))/86400000)>3))return [];
+    const values=[];const min=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};
+    for(let t=min(w.start);t+req.duration<=min(w.end);t+=15){
+     if(req.period==='morning'&&(t<480||t>=720)||req.period==='afternoon'&&(t<720||t>=960)||req.period==='after4'&&t<960)continue;
+     const h=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+     if(coachSchedule.bookings.some(b=>b.date===w.date&&min(b.start)<t+req.duration&&min(b.end)>t))continue;
+     values.push({id:w.id+'@'+h,date:w.date,start:h});
+    }
+    return values;
+   }).slice(0,80);
+   for(const slot of matches){const opt=document.createElement('option');opt.value=slot.id;opt.textContent=niceDate(slot.date)+' · '+niceTime(slot.start);select.append(opt)}
+   const send=document.createElement('button');send.type='button';send.className='offer-btn';send.textContent='Offer time';
+   send.disabled=!matches.length;
+   send.onclick=async()=>{
+    if(!select.value){message('Choose a time before sending an offer.');return}
+    send.disabled=true;try{const response=await api('coachOfferRequest',coachPayload({requestId:req.id,slotId:select.value}));message(response.message,true);await coachLoadRequests()}
+    catch(error){message(error.message)}finally{send.disabled=false}
+   };
+   const decline=document.createElement('button');decline.type='button';decline.textContent='Decline';
+   decline.onclick=async()=>{
+    if(!window.confirm('Decline the time request from '+req.participant+'?'))return;
+    decline.disabled=true;try{await api('coachCloseRequest',coachPayload({requestId:req.id,status:'DECLINED'}));await coachLoadRequests()}
+    catch(error){message(error.message);decline.disabled=false}
+   };
+   controls.append(select,send,decline);card.append(controls);host.append(card);
+  }
+ }catch(error){host.textContent='Unable to load requests.';message(error.message)}
+}
+$('requestRefresh').onclick=coachLoadRequests;
 
 /* Consent-based waitlist: separate from booking, never implies a reservation. */
 $('waitlistToggle').onclick=()=>{
@@ -888,5 +1007,10 @@ if(new URLSearchParams(location.search).has('unsubscribe')){
 
 renderCalendar();
 const initialPage=new URLSearchParams(location.search).get('view');
-if(initialPage==='manage'||initialPage==='booking')navigate(initialPage);
+if(['manage','booking','coach'].includes(initialPage))navigate(initialPage);
+if(initialPage==='booking'){
+ const args=new URLSearchParams(location.search),date=args.get('date'),duration=Number(args.get('duration'));
+ if(duration===60||duration===90){state.duration=duration;document.querySelectorAll('[data-duration]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.duration)===duration)))}
+ if(/^\\d{4}-\\d{2}-\\d{2}$/.test(date||'')){state.day=date;const d=new Date(date+'T12:00:00');state.month=new Date(d.getFullYear(),d.getMonth(),1);loadAvailability().then(()=>{renderCalendar();renderTimes()})}
+}
 </script></body></html>
