@@ -71,6 +71,17 @@ body.booking-layout main{max-width:1020px}
  .times-sidebar .time-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:420px){.times-sidebar .time-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-legend{gap:10px}.day{min-height:40px}}
+
+.waitlist-callout{margin-top:27px;border:1px solid #dce5dd;border-radius:17px;padding:22px 24px;background:#f5f8f4}
+.waitlist-callout h3{font-size:18px;letter-spacing:-.028em;font-weight:650;margin:10px 0 8px;color:#24413b}
+.waitlist-callout p{font-size:12px;line-height:1.6;color:#86968c;margin:0 0 15px}
+.waitlist-toggle{border:1px solid #a6bdac;border-radius:10px;background:transparent;color:#275745;padding:11px 15px;font-weight:650;font-size:13px;cursor:pointer}
+.waitlist-toggle span{padding-left:12px;font-size:16px}
+.waitlist-callout .label{margin:17px 0 8px}
+.waitlist-callout .action{margin-top:17px}
+.consent{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.55;color:#506c5c;margin-top:17px}
+.consent input{width:18px;height:18px;flex-shrink:0;margin:0;accent-color:#285449}
+@media(min-width:721px){.waitlist-callout{margin-top:22px}}
 </style>
 </head>
 <body>
@@ -95,6 +106,17 @@ body.booking-layout main{max-width:1020px}
   <div id="times" class="time-grid"></div>
  </aside>
 </div>
+<section class="waitlist-callout" id="waitlistSection">
+ <div class="waitlist-header"><div><div class="times-eyebrow">NOT SEEING A GOOD TIME?</div><h3>Get notified when a spot opens.</h3><p>Join the waitlist for a specific day. We'll email you if a matching appointment becomes available.</p></div></div>
+ <button class="waitlist-toggle" id="waitlistToggle" type="button" aria-expanded="false">Join the waitlist <span aria-hidden="true">+</span></button>
+ <form id="waitlistForm" class="hidden">
+  <label class="label" for="waitlistDate">Preferred date</label><input id="waitlistDate" type="date" required>
+  <label class="label" for="waitlistPerson">Participant name</label><input id="waitlistPerson" maxlength="100" required placeholder="Participant name">
+  <label class="label" for="waitlistEmail">Email for notifications</label><input id="waitlistEmail" type="email" required placeholder="you@example.com">
+  <label class="consent"><input id="waitlistConsent" type="checkbox" required><span>I agree to receive one email if an appointment becomes available for this date. I understand that the time is not reserved.</span></label>
+  <button class="action" type="submit" id="waitlistSubmit">Notify me when available →</button>
+ </form>
+</section>
 <form id="bookingForm" class="hidden"><div class="divider"></div><div class="label" id="clientNameLabel">Participant name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Participant name"><div class="label" id="contactEmailLabel">Contact email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><button class="action" type="submit" id="confirmBtn">Confirm booking →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
 </section>
 <section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE RESERVATION</div><h1>Change a booking.</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
@@ -184,7 +206,7 @@ function renderCalendar(){
  for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
   const key=dateKey(year,month,d),el=document.createElement('button');el.type='button';el.className='day';el.textContent=d;const enabled=valid.has(key);
   el.disabled=!enabled;el.classList.toggle('available',enabled);el.classList.toggle('active',state.day===key);el.setAttribute('aria-label',niceDate(key)+(enabled?' — available':' — unavailable'));el.setAttribute('aria-pressed',String(state.day===key));
-  el.onclick=()=>{state.day=key;state.chosen=null;renderCalendar();renderTimes();};host.append(el);
+  el.onclick=()=>{state.day=key;state.chosen=null;renderCalendar();renderTimes();if(!$('waitlistForm').classList.contains('hidden'))$('waitlistDate').value=key;};host.append(el);
  }
 }
 $('prevMonth').onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()-1,1);renderCalendar()};
@@ -283,6 +305,30 @@ $('coachLogout').onclick=async()=>{
 };
 $('coachDate').value=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
 $('coachDate').min=$('coachDate').value;
+
+
+/* Consent-based waitlist: separate from booking, never implies a reservation. */
+$('waitlistToggle').onclick=()=>{
+ const open=$('waitlistForm').classList.toggle('hidden')===false;
+ $('waitlistToggle').setAttribute('aria-expanded',String(open));
+ $('waitlistToggle').querySelector('span').textContent=open?'−':'+';
+ if(open){$('waitlistDate').value=state.day||dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());}
+};
+$('waitlistDate').min=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+$('waitlistForm').onsubmit=async e=>{
+ e.preventDefault();clearMessage();const btn=$('waitlistSubmit');btn.disabled=true;
+ try{
+  const result=await api('waitlistJoin',{date:$('waitlistDate').value,duration:state.duration,participant:$('waitlistPerson').value.trim(),email:$('waitlistEmail').value.trim(),consent:$('waitlistConsent').checked});
+  message(result.message,true);$('waitlistForm').reset();$('waitlistForm').classList.add('hidden');$('waitlistToggle').setAttribute('aria-expanded','false');
+ }catch(err){message(err.message)}finally{btn.disabled=false}
+};
+if(new URLSearchParams(location.search).has('unsubscribe')){
+ const token=new URLSearchParams(location.search).get('unsubscribe');
+ if(confirm('Stop availability notifications for this waitlist request?')){
+  api('waitlistLeave',{token}).then(r=>message(r.message,true)).catch(e=>message(e.message));
+ }
+ history.replaceState(null,'',location.pathname+location.hash);
+}
 
 renderCalendar();
 </script></body></html>
