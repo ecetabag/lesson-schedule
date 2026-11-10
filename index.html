@@ -82,14 +82,27 @@ body.booking-layout main{max-width:1020px}
 .consent{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.55;color:#506c5c;margin-top:17px}
 .consent input{width:18px;height:18px;flex-shrink:0;margin:0;accent-color:#285449}
 @media(min-width:721px){.waitlist-callout{margin-top:22px}}
+
+/* Two compact, squared-off appointment choices on the homepage. */
+.home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:33px}
+.home-actions .choice{display:flex;flex-direction:column;align-items:flex-start;position:relative;min-height:196px;padding:21px;border-radius:9px;margin:0;gap:16px}
+.home-actions .glyph{width:45px;height:45px;border-radius:8px}
+.home-actions .description{flex:1;width:100%;padding-right:9px}
+.home-actions .description b{font-size:15px;line-height:1.4}
+.home-actions .description span{font-size:12px;line-height:1.55;margin-top:8px}
+.home-actions .arrow{position:absolute;right:21px;top:29px;font-size:21px}
+@media(max-width:480px){.home-actions{gap:10px}.home-actions .choice{padding:16px;min-height:183px;gap:14px}.home-actions .arrow{right:15px;top:22px}.home-actions .description b{font-size:13px}.home-actions .description span{font-size:11px}.home-actions .glyph{width:41px;height:41px}}
+@media(max-width:350px){.home-actions{grid-template-columns:1fr}.home-actions .choice{min-height:auto}}
 </style>
 </head>
 <body>
 <header><a href="#" class="brand" id="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M2.5 12c5-5 8-5 13 0s8 5 12 0M2.5 19c5-5 8-5 13 0s8 5 12 0" stroke="#30575a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg><span id="appBrand">Waterpolo Lesson Schedule</span></a><button type="button" class="coach-link" data-go="coach">Coach login</button></header>
 <main>
 <section id="home" class="screen active"><div class="eyebrow">BOOKING & AVAILABILITY</div><h1 id="appHeading">Waterpolo Lesson Schedule</h1><p class="intro">Book an appointment or manage an existing reservation.</p>
+<div class="home-actions">
 <button class="choice" data-go="booking"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M12 13v6M9 16h6"/></svg></span><span class="description"><b>Book an appointment</b><span>Choose a date, time and duration</span></span><span class="arrow">→</span></button>
 <button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage a booking</b><span>Find and reschedule your appointment</span></span><span class="arrow">→</span></button>
+</div>
 </section>
 <section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW BOOKING</div><h1>Find a time.</h1><p class="intro">Select your appointment length and an available date.</p>
 <div class="label">Appointment duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute appointment</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute appointment</small></button></div>
