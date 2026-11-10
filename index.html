@@ -196,54 +196,75 @@ footer .footer-sep{color:#a1b2a8}
 }
 
 
-/* OnDeck gold + midnight navy actions, keeping the original light layout. */
+/* OnDeck logo mint + midnight navy accents, preserving the light layout. */
 :root{
  --ondeck-navy:#171b2a;
- --ondeck-navy-hover:#272d43;
- --ondeck-gold:#ffe07c;
- --ondeck-gold-hover:#f5d369;
- --ondeck-gold-soft:#fff7dc;
+ --ondeck-navy-hover:#292f45;
+ --ondeck-mint:#9EF5C3;
+ --ondeck-mint-hover:#7DEBAA;
+ --ondeck-mint-soft:#E8FCF0;
+ --ondeck-mint-border:#60CA8D;
 }
 .action,.modal-confirm{
- background:var(--ondeck-navy);
- color:#fff;
- border-color:var(--ondeck-navy);
+ background:var(--ondeck-mint);
+ color:var(--ondeck-navy);
+ border:1px solid var(--ondeck-mint-border);
 }
-.action:hover:not(:disabled),.modal-confirm:hover:not(:disabled){background:var(--ondeck-navy-hover)}
+.action:hover:not(:disabled),.modal-confirm:hover:not(:disabled){
+ background:var(--ondeck-mint-hover);
+ border-color:#4DBD7A;
+}
+.action:disabled{opacity:.56}
 .waitlist-toggle{
- background:var(--ondeck-gold);
- border-color:#c9a84d;
+ background:var(--ondeck-mint);
+ border-color:var(--ondeck-mint-border);
  color:var(--ondeck-navy);
 }
 .waitlist-toggle:hover,.waitlist-toggle[aria-expanded="true"]{
- background:var(--ondeck-gold-hover);
- border-color:#b8983f;
+ background:var(--ondeck-mint-hover);
+ border-color:#4DBD7A;
 }
-.waitlist-toggle:focus-visible,button:focus-visible{outline:3px solid #e8c357;outline-offset:3px}
-.coach-link{color:var(--ondeck-navy);border-color:#c9bd96;background:var(--ondeck-gold-soft)}
-.coach-link:hover{background:var(--ondeck-gold);border-color:#c9a84d}
-.home-actions .choice:hover,.home-actions .choice:focus-visible{border-color:#d4b458;background:var(--ondeck-gold-soft)}
+.waitlist-toggle:focus-visible,button:focus-visible{
+ outline:3px solid #70D89B;
+ outline-offset:3px;
+}
+.coach-link{
+ color:var(--ondeck-navy);
+ border-color:var(--ondeck-mint-border);
+ background:var(--ondeck-mint-soft);
+}
+.coach-link:hover{background:var(--ondeck-mint);border-color:var(--ondeck-mint-border)}
+.home-actions .choice:hover,.home-actions .choice:focus-visible{
+ border-color:var(--ondeck-mint-border);
+ background:var(--ondeck-mint-soft);
+}
 .home-actions .choice:hover .arrow{color:var(--ondeck-navy)}
 .duration[aria-pressed="true"]{
- border-color:#c9a84d;
- background:var(--ondeck-gold-soft);
- box-shadow:inset 0 0 0 1px #d9bb5f;
+ border-color:var(--ondeck-mint-border);
+ background:var(--ondeck-mint-soft);
+ box-shadow:inset 0 0 0 1px var(--ondeck-mint-border);
  color:var(--ondeck-navy);
 }
-.day.available{background:var(--ondeck-gold-soft);border-color:#d6be79;color:var(--ondeck-navy)}
-.day.available:hover{background:#ffedb3}
-.day.available::after{background:#c29526}
-.day.active,.day.active.available{background:var(--ondeck-navy);border-color:var(--ondeck-navy);color:var(--ondeck-gold)}
-.day.active::after{background:var(--ondeck-gold)}
-.legend-open{background:var(--ondeck-gold-soft);border-color:#d6be79}
+.day.available{background:var(--ondeck-mint-soft);border-color:var(--ondeck-mint-border);color:var(--ondeck-navy)}
+.day.available:hover{background:#D2F9E3}
+.day.available::after{background:#44B979}
+.day.active,.day.active.available{
+ background:var(--ondeck-navy);
+ border-color:var(--ondeck-navy);
+ color:var(--ondeck-mint);
+}
+.day.active::after{background:var(--ondeck-mint)}
+.legend-open{background:var(--ondeck-mint-soft);border-color:var(--ondeck-mint-border)}
 .legend-selected{background:var(--ondeck-navy)}
 .time[aria-pressed="true"],.times-sidebar .time[aria-pressed="true"]{
- background:var(--ondeck-navy);border-color:var(--ondeck-navy);color:var(--ondeck-gold);
+ background:var(--ondeck-navy);
+ border-color:var(--ondeck-navy);
+ color:var(--ondeck-mint);
 }
-.times-sidebar .time:hover{border-color:#c9a84d;background:var(--ondeck-gold-soft)}
-.times-sidebar .time[aria-pressed="true"]:hover{background:var(--ondeck-navy);color:var(--ondeck-gold)}
-.modal-cancel:hover{background:var(--ondeck-gold-soft)}
-.modal-icon{background:var(--ondeck-gold-soft);border-color:#e9d8a8;color:var(--ondeck-navy)}
+.times-sidebar .time:hover{border-color:var(--ondeck-mint-border);background:var(--ondeck-mint-soft)}
+.times-sidebar .time[aria-pressed="true"]:hover{background:var(--ondeck-navy);color:var(--ondeck-mint)}
+.modal-cancel:hover{background:var(--ondeck-mint-soft)}
+.modal-icon{background:var(--ondeck-mint-soft);border-color:#BDEBD0;color:var(--ondeck-navy)}
 
 </style>
 </head>
