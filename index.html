@@ -330,6 +330,55 @@ footer .footer-sep{color:#a1b2a8}
 .booked-edit-success{background:#e6f9ee;border:1px solid #b1e4c4;border-radius:9px;padding:13px 15px;font-size:12px;line-height:1.55;color:#205d3f;margin:15px 0 0;text-align:left}
 @media(max-width:480px){.booked-edit-form{padding:17px 15px}.booked-edit-fields input,.booked-edit-fields textarea{font-size:16px}}
 
+
+/* Calendar-style coach and admin workspace */
+body:has(#coach.active) main{max-width:1080px;padding-top:43px}
+#coach>.intro{max-width:575px}
+.dashboard-login{max-width:430px;background:white;padding:26px;border:1px solid #dce8e0;border-radius:14px;box-shadow:0 12px 45px #0b30210a}
+.dashboard-login .label:not(:first-child){margin-top:16px}
+.dashboard-login .action{margin-top:20px}
+.dashboard-topline{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0 25px}
+.portal-chip{display:inline-flex;padding:5px 10px;border-radius:999px;background:#e9f6ee;color:#275b46;font-size:10px;font-weight:750;letter-spacing:.1em}
+.dashboard-welcome{font-size:13px;color:#82958a;margin:8px 0 0}
+.dashboard-outline{border:1px solid #d7e4dc;background:#fff;color:#37584a;border-radius:9px;padding:10px 15px;cursor:pointer;font-size:12px}
+.dashboard-calendar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 15px}
+.dashboard-calendar-top .eyebrow{margin:0 0 7px}
+.dashboard-calendar-top h2{font-size:26px;letter-spacing:-.04em;margin:0}
+.dashboard-calendar-nav{display:flex;gap:6px}
+.dashboard-calendar-nav button{border:1px solid #dce5dd;border-radius:8px;background:#fff;cursor:pointer;font:inherit;color:#24463a;padding:7px 13px;min-height:36px}
+.dashboard-calendar-nav button:first-child,.dashboard-calendar-nav button:last-child{font-size:23px;line-height:1}
+.dashboard-legend{display:flex;gap:18px;font-size:11px;color:#768b80;margin:0 0 13px}
+.dashboard-legend>span{display:flex;align-items:center;gap:7px}
+.legend-dot{display:inline-block;width:9px;height:9px;border-radius:3px}
+.legend-dot.booked{background:#244a42}.legend-dot.open{background:#b8e3c8}
+.coach-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid #dce6df;background:#fff;border-radius:13px;overflow:hidden}
+.cal-weekday{text-align:center;padding:13px 0;color:#83978b;background:#f6f9f6;font-size:10px;letter-spacing:.08em;font-weight:750;border-bottom:1px solid #e5eee7}
+.coach-cal-day{min-height:111px;min-width:0;background:#fff;border:0;border-right:1px solid #edf1ed;border-bottom:1px solid #edf1ed;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:5px;font:inherit;color:#2a4338}
+.coach-cal-day:nth-child(7n){border-right:0}
+.coach-cal-day.is-outside{background:#f9faf8;color:#b9c5bd}
+.coach-cal-day.is-selected{background:#f2f9f2;box-shadow:inset 0 0 0 2px #9ecdb0}
+.coach-cal-day.is-today .cal-day-number{background:#233f35;color:white;border-radius:50%}
+.cal-day-number{width:25px;height:25px;display:grid;place-items:center;font-size:12px;font-weight:650}
+.cal-event-pill{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:5px;padding:5px 6px;font-size:10px;font-weight:650;line-height:1.2}
+.cal-event-pill.booked{background:#244a42;color:#fff}.cal-event-pill.open{background:#d8efdf;color:#34674c}
+.cal-event-more{font-size:10px;color:#6e8175;padding-left:4px}
+.dashboard-selected-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:25px 0 12px}
+.dashboard-selected-head h3{font-size:17px;letter-spacing:-.02em;margin:0}.dashboard-selected-head span{font-size:12px;color:#829489}
+.dashboard-events{display:grid;gap:9px}.dashboard-event-row{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #e1e9e2;border-radius:10px;padding:14px 16px}
+.dashboard-event-row .event-time{width:100px;flex-shrink:0;font-size:12px;font-weight:700;color:#2f4c40}
+.event-bar{width:4px;align-self:stretch;border-radius:4px;background:#b8e3c8}
+.dashboard-event-row.is-booked .event-bar{background:#244a42}
+.dashboard-event-content{flex:1;min-width:0}.dashboard-event-content strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.dashboard-event-content small{display:block;color:#809187;font-size:11px;line-height:1.5;margin-top:4px}
+.event-empty{background:#fff;border:1px dashed #dce9df;border-radius:10px;padding:25px 18px;color:#8a9b90;text-align:center;font-size:13px}
+.dashboard-add{border:1px solid #d7e5db;background:#f5faf5;border-radius:12px;margin:24px 0;overflow:hidden}
+.dashboard-add summary{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#264b39;padding:19px 22px;list-style:none}
+.dashboard-add summary::-webkit-details-marker{display:none}
+.dashboard-add-caption{font-weight:450;color:#879c8e;font-size:11px}
+.dashboard-add form{padding:0 22px 23px}
+.dashboard-add .action{margin-top:15px}
+#coachWindows{display:grid;gap:9px}
+@media(max-width:680px){.coach-cal-day{min-height:79px;padding:5px 3px;gap:3px}.cal-event-pill{font-size:8px;padding:4px 3px}.cal-day-number{font-size:11px;width:22px;height:22px}.dashboard-calendar-top h2{font-size:22px}.dashboard-calendar-nav button{padding:6px 9px}.dashboard-event-row .event-time{width:75px;font-size:11px}.dashboard-add summary{padding:15px}.dashboard-add-caption{display:none}}
 </style>
 </head>
 <body>
@@ -429,37 +478,34 @@ footer .footer-sep{color:#a1b2a8}
 
 <section id="coach" class="screen">
 <button class="back" type="button" data-go="home">← Back</button>
-<div class="eyebrow">PROVIDER PORTAL</div><h1>Coach availability</h1>
-<p class="intro">Sign in with your approved provider email. Set your available hours here, and bookable lesson times will appear on the public calendar automatically.</p>
-<form id="coachEmailForm">
- <label class="label" for="coachEmail">Provider email</label>
- <input id="coachEmail" name="email" type="email" autocomplete="email" required placeholder="provider@example.com">
- <button class="action" id="coachSendBtn" type="submit">Email me a sign-in code →</button>
-</form>
-<form id="coachCodeForm" class="hidden">
- <label class="label" for="coachCode">6-digit email code</label>
- <input id="coachCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="000000">
- <button class="action" id="coachVerifyBtn" type="submit">Sign in →</button>
+<div class="eyebrow">ONDECK · TEAM PORTAL</div><h1 id="dashboardHeading">Your schedule</h1>
+<p class="intro" id="dashboardIntro">Sign in to see lessons, manage available hours, and review your calendar.</p>
+<form id="coachLoginForm" class="dashboard-login">
+ <label class="label" for="coachUsername">Username</label>
+ <input id="coachUsername" type="text" autocomplete="username" required placeholder="Username" spellcheck="false">
+ <label class="label" for="coachPassword">Password</label>
+ <input id="coachPassword" type="password" autocomplete="current-password" required placeholder="Password">
+ <button class="action" id="coachLoginBtn" type="submit">Sign in to dashboard →</button>
 </form>
 <div id="coachDashboard" class="hidden">
- <div class="coach-subtitle"><h2>Add available hours</h2><button id="coachLogout" type="button">Sign out</button></div>
+ <div class="dashboard-topline"><div><span class="portal-chip" id="dashboardRole">COACH</span><p class="dashboard-welcome" id="dashboardWelcome"></p></div><button id="coachLogout" type="button" class="dashboard-outline">Sign out</button></div>
+ <div class="dashboard-calendar-top">
+  <div><div class="eyebrow">SCHEDULE</div><h2 id="coachMonthHeading">Calendar</h2></div>
+  <div class="dashboard-calendar-nav"><button type="button" id="coachPrevMonth" aria-label="Previous month">‹</button><button type="button" id="coachToday">Today</button><button type="button" id="coachNextMonth" aria-label="Next month">›</button></div>
+ </div>
+ <div class="dashboard-legend"><span><i class="legend-dot booked"></i>Booked lesson</span><span><i class="legend-dot open"></i>Availability</span></div>
+ <div class="coach-calendar" id="coachCalendar" aria-label="Lessons and availability by month"></div>
+ <div class="dashboard-selected-head"><h3 id="coachDayHeading">Selected day</h3><span id="coachDayCount"></span></div>
+ <div id="coachDayEvents" class="dashboard-events" aria-live="polite"></div>
+ <details class="dashboard-add"><summary><span>+ Add available hours</span><span class="dashboard-add-caption">Set a new bookable window</span></summary>
  <form id="coachAddForm">
-  <label class="label" for="coachDate">Date</label>
-  <input class="coach-date" id="coachDate" type="date" required>
-  <div class="two">
-   <div><label class="label" for="coachStart">Start time</label><input id="coachStart" type="time" required value="09:00" step="900"></div>
-   <div><label class="label" for="coachEnd">End time</label><input id="coachEnd" type="time" required value="12:00" step="900"></div>
-  </div>
-  <label class="label" for="coachLocation">Pick a location</label>
-  <select id="coachLocation" name="coachLocation" required>
-   <option value="" disabled selected>Select a pool</option>
-   <option value="tam-high">Tam High — Mill Valley</option>
-   <option value="terra-linda-high">Terra Linda High School — San Rafael</option>
-  </select>
-  <button class="action" id="coachSaveBtn" type="submit">Add teaching window →</button>
-  <p class="small">Select the hours you are available. Visitors can book 1-hour or 1.5-hour lessons within these windows.</p>
- </form>
- <div class="coach-subtitle"><h2>Available windows</h2><button id="coachRefresh" type="button">Refresh</button></div>
+  <label class="label" for="coachDate">Date</label><input class="coach-date" id="coachDate" type="date" required>
+  <div class="two"><div><label class="label" for="coachStart">Start time</label><input id="coachStart" type="time" required value="09:00" step="900"></div><div><label class="label" for="coachEnd">End time</label><input id="coachEnd" type="time" required value="12:00" step="900"></div></div>
+  <label class="label" for="coachLocation">Pick a location</label><select id="coachLocation" name="coachLocation" required><option value="" disabled selected>Select a pool</option><option value="tam-high">Tam High — Mill Valley</option><option value="terra-linda-high">Terra Linda High School — San Rafael</option></select>
+  <p class="small" id="addWindowHint">Times added here will appear on the public booking calendar.</p>
+  <button class="action" id="coachSaveBtn" type="submit">Add available hours →</button>
+ </form></details>
+ <div class="coach-subtitle"><h2>Manage available windows</h2><button id="coachRefresh" type="button">Refresh calendar</button></div>
  <div id="coachWindows" aria-live="polite"></div>
 </div>
 </section>
@@ -712,52 +758,110 @@ $('modalConfirm').onclick=async()=>{
  }
 };
 
+const coachSchedule={month:new Date(new Date().getFullYear(),new Date().getMonth(),1),day:dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()),windows:[],bookings:[],role:'coach'};
 function coachPayload(extra={}){return {...extra,token:state.coachToken}}
+function coachEventsFor(day){
+ return [
+  ...coachSchedule.bookings.filter(b=>b.date===day).map(b=>({...b,kind:'booked'})),
+  ...coachSchedule.windows.filter(w=>w.date===day).map(w=>({...w,kind:'open'}))
+ ].sort((a,b)=>a.start.localeCompare(b.start)||(a.kind==='booked'?-1:1));
+}
+function paintCoachCalendar(){
+ const month=coachSchedule.month,year=month.getFullYear(),m=month.getMonth();
+ $('coachMonthHeading').textContent=month.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+ const grid=$('coachCalendar');grid.replaceChildren();
+ for(const wd of ['SUN','MON','TUE','WED','THU','FRI','SAT']){const label=document.createElement('div');label.className='cal-weekday';label.textContent=wd;grid.append(label)}
+ const first=new Date(year,m,1).getDay(),total=new Date(year,m+1,0).getDate();
+ const cells=Math.ceil((first+total)/7)*7;
+ const today=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
+ for(let idx=0;idx<cells;idx++){
+  const d=new Date(year,m,idx-first+1),day=dateKey(d.getFullYear(),d.getMonth(),d.getDate()),events=coachEventsFor(day);
+  const item=document.createElement('button');item.type='button';item.className='coach-cal-day';
+  if(d.getMonth()!==m)item.classList.add('is-outside');
+  if(day===coachSchedule.day)item.classList.add('is-selected');
+  if(day===today)item.classList.add('is-today');
+  item.setAttribute('aria-label',niceDate(day)+', '+events.length+' schedule items');
+  const num=document.createElement('span');num.className='cal-day-number';num.textContent=d.getDate();item.append(num);
+  for(const ev of events.slice(0,2)){
+   const pill=document.createElement('span');pill.className='cal-event-pill '+ev.kind;
+   pill.textContent=niceTime(ev.start)+' '+(ev.kind==='booked'?ev.participant:'Available');item.append(pill);
+  }
+  if(events.length>2){const more=document.createElement('span');more.className='cal-event-more';more.textContent='+'+(events.length-2)+' more';item.append(more)}
+  item.onclick=()=>{coachSchedule.day=day;const selected=new Date(day+'T12:00:00');coachSchedule.month=new Date(selected.getFullYear(),selected.getMonth(),1);$('coachDate').value=day;paintCoachCalendar()};
+  grid.append(item);
+ }
+ $('coachDayHeading').textContent=new Date(coachSchedule.day+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+ const events=coachEventsFor(coachSchedule.day);
+ $('coachDayCount').textContent=events.length+' item'+(events.length===1?'':'s');
+ const host=$('coachDayEvents');host.replaceChildren();
+ if(!events.length){const el=document.createElement('div');el.className='event-empty';el.textContent='Nothing scheduled on this day.';host.append(el);return}
+ for(const ev of events){
+  const row=document.createElement('div');row.className='dashboard-event-row '+(ev.kind==='booked'?'is-booked':'');
+  const bar=document.createElement('span');bar.className='event-bar';
+  const time=document.createElement('span');time.className='event-time';time.textContent=niceTime(ev.start)+' – '+niceTime(ev.end);
+  const body=document.createElement('div');body.className='dashboard-event-content';
+  const title=document.createElement('strong');title.textContent=ev.kind==='booked'?ev.participant+' · Lesson':'Available for bookings';
+  const meta=document.createElement('small');meta.textContent=(ev.location||'Pool')+(coachSchedule.role==='admin'&&ev.coachEmail?' · '+ev.coachEmail:'')+(ev.kind==='booked'?' · '+ev.duration+' min':'');
+  body.append(title,meta);row.append(bar,time,body);host.append(row);
+ }
+}
 async function coachLoadWindows(){
  if(!state.coachToken)return;
- const host=$('coachWindows');host.textContent='Loading availability…';
- try{const result=await api('coachAvailability',coachPayload());host.replaceChildren();
-  if(!result.windows.length){const empty=document.createElement('div');empty.className='coach-empty';empty.textContent='No open availability yet. Add your first window above.';host.append(empty);return}
+ const host=$('coachWindows');host.textContent='Loading schedule…';
+ try{
+  const result=await api('coachAvailability',coachPayload());
+  coachSchedule.windows=result.windows||[];coachSchedule.bookings=result.bookings||[];coachSchedule.role=result.role||'coach';
+  $('dashboardRole').textContent=coachSchedule.role==='admin'?'ADMIN · ALL SCHEDULES':'COACH';
+  $('dashboardWelcome').textContent=coachSchedule.role==='admin'?'You can view every lesson and manage availability for Albert.':'Your booked lessons and available coaching windows.';
+  $('addWindowHint').textContent=coachSchedule.role==='admin'?'Availability you add is assigned to Albert; you are not listed as a coach.':'Times you add will appear on the public booking calendar.';
+  paintCoachCalendar();host.replaceChildren();
+  if(!result.windows.length){const empty=document.createElement('div');empty.className='event-empty';empty.textContent='No open availability windows yet.';host.append(empty);return}
   for(const w of result.windows){
    const row=document.createElement('div');row.className='coach-window';
    const info=document.createElement('div');const name=document.createElement('b');name.textContent=niceDate(w.date)+' · '+niceTime(w.start)+'–'+niceTime(w.end);
-   const details=document.createElement('span');details.textContent=w.location+' · '+w.bookingCount+' booked lesson'+(w.bookingCount===1?'':'s');
+   const details=document.createElement('span');details.textContent=w.location+' · '+w.bookingCount+' booked lesson'+(w.bookingCount===1?'':'s')+(coachSchedule.role==='admin'?' · '+(w.coachEmail||'Unassigned'):'');
    info.append(name,details);row.append(info);
    const remove=document.createElement('button');remove.type='button';remove.textContent=w.bookingCount?'Booked':'Remove';
-   remove.disabled=w.bookingCount>0;remove.setAttribute('aria-label','Remove window on '+w.date+' at '+w.start);
+   remove.disabled=w.bookingCount>0;
    remove.onclick=async()=>{
-    if(!confirm('Remove '+niceDate(w.date)+' '+niceTime(w.start)+'–'+niceTime(w.end)+'?'))return;
-    remove.disabled=true;try{await api('coachRemoveWindow',coachPayload({windowId:w.id}));message('Availability removed from the public calendar.',true);await coachLoadWindows();}
+    if(!window.confirm('Remove available hours on '+niceDate(w.date)+' at '+niceTime(w.start)+'?'))return;
+    remove.disabled=true;
+    try{await api('coachRemoveWindow',coachPayload({windowId:w.id}));message('Availability removed.',true);await coachLoadWindows()}
     catch(e){message(e.message);remove.disabled=false}
    };row.append(remove);host.append(row);
   }
- }catch(e){host.textContent='Could not load availability.';message(e.message)}
+ }catch(e){host.textContent='Could not load schedule.';message(e.message)}
 }
-$('coachEmailForm').onsubmit=async e=>{
- e.preventDefault();clearMessage();const btn=$('coachSendBtn');btn.disabled=true;state.coachEmail=$('coachEmail').value.trim().toLowerCase();
- try{const r=await api('coachRequestCode',{email:state.coachEmail});$('coachCodeForm').classList.remove('hidden');message(r.message,true);}
- catch(e){message(e.message)}finally{btn.disabled=false}
-};
-$('coachCodeForm').onsubmit=async e=>{
- e.preventDefault();clearMessage();const btn=$('coachVerifyBtn');btn.disabled=true;
- try{const r=await api('coachVerifyCode',{email:state.coachEmail,code:$('coachCode').value.trim()});state.coachToken=r.token;$('coachEmailForm').classList.add('hidden');$('coachCodeForm').classList.add('hidden');$('coachDashboard').classList.remove('hidden');await coachLoadWindows();message('Signed in as '+r.email+'.',true);}
- catch(e){message(e.message)}finally{btn.disabled=false}
+$('coachLoginForm').onsubmit=async e=>{
+ e.preventDefault();clearMessage();const btn=$('coachLoginBtn');btn.disabled=true;
+ try{
+  const r=await api('dashboardLogin',{username:$('coachUsername').value.trim(),password:$('coachPassword').value});
+  state.coachToken=r.token;$('coachPassword').value='';
+  $('coachLoginForm').classList.add('hidden');$('coachDashboard').classList.remove('hidden');
+  $('dashboardHeading').textContent=r.role==='admin'?'Team calendar':'Coach calendar';
+  $('dashboardIntro').classList.add('hidden');
+  await coachLoadWindows();message('Welcome to OnDeck, '+r.name+'.',true);
+ }catch(err){message(err.message)}finally{btn.disabled=false}
 };
 $('coachAddForm').onsubmit=async e=>{
  e.preventDefault();clearMessage();const btn=$('coachSaveBtn');btn.disabled=true;
  try{
   const r=await api('coachAddWindow',coachPayload({date:$('coachDate').value,start:$('coachStart').value,end:$('coachEnd').value,location:$('coachLocation').value.trim()}));
-  message('Availability added for '+niceDate(r.window.date)+'. Visitors can now see eligible times.',true);await coachLoadWindows();
- }catch(e){message(e.message)}finally{btn.disabled=false}
+  coachSchedule.day=r.window.date;
+  const d=new Date(r.window.date+'T12:00:00');coachSchedule.month=new Date(d.getFullYear(),d.getMonth(),1);
+  message('Availability added for '+niceDate(r.window.date)+'.',true);await coachLoadWindows();
+ }catch(err){message(err.message)}finally{btn.disabled=false}
 };
 $('coachRefresh').onclick=()=>coachLoadWindows();
+$('coachPrevMonth').onclick=()=>{coachSchedule.month=new Date(coachSchedule.month.getFullYear(),coachSchedule.month.getMonth()-1,1);coachSchedule.day=dateKey(coachSchedule.month.getFullYear(),coachSchedule.month.getMonth(),1);paintCoachCalendar()};
+$('coachNextMonth').onclick=()=>{coachSchedule.month=new Date(coachSchedule.month.getFullYear(),coachSchedule.month.getMonth()+1,1);coachSchedule.day=dateKey(coachSchedule.month.getFullYear(),coachSchedule.month.getMonth(),1);paintCoachCalendar()};
+$('coachToday').onclick=()=>{const t=new Date();coachSchedule.month=new Date(t.getFullYear(),t.getMonth(),1);coachSchedule.day=dateKey(t.getFullYear(),t.getMonth(),t.getDate());paintCoachCalendar()};
 $('coachLogout').onclick=async()=>{
- if(state.coachToken){try{await api('coachSignOut',coachPayload())}catch(e){}}
- state.coachToken=null;$('coachCode').value='';$('coachDashboard').classList.add('hidden');$('coachCodeForm').classList.add('hidden');$('coachEmailForm').classList.remove('hidden');navigate('home');
+ if(state.coachToken){try{await api('coachSignOut',coachPayload())}catch(_){}}
+ state.coachToken=null;$('coachDashboard').classList.add('hidden');$('coachLoginForm').classList.remove('hidden');$('dashboardIntro').classList.remove('hidden');$('dashboardHeading').textContent='Your schedule';navigate('home');
 };
 $('coachDate').value=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
 $('coachDate').min=$('coachDate').value;
-
 
 /* Consent-based waitlist: separate from booking, never implies a reservation. */
 $('waitlistToggle').onclick=()=>{
