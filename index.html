@@ -307,6 +307,29 @@ footer .footer-sep{color:#a1b2a8}
 .booked-directions a:hover{color:#16462e}
 @media(max-width:480px){#coachLocation{font-size:16px}}
 
+
+/* Compact confirmation-page editor for newly booked sessions. */
+.booked-edit-row{border-top:1px solid #e7ede7;margin-top:15px;padding-top:13px;text-align:left}
+.booked-edit-toggle{display:inline-flex;align-items:center;gap:8px;background:transparent;border:0;border-radius:7px;padding:7px 3px;color:#225941;font-size:12px;font-weight:680;cursor:pointer}
+.booked-edit-toggle svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.booked-edit-toggle:hover{color:#102f22;text-decoration:underline;text-underline-offset:3px}
+.booked-edit-form{text-align:left;margin-top:14px;background:#f9fcfa;border:1px solid #cde6d6;border-radius:12px;padding:21px 20px}
+.booked-edit-form h2{margin:0 0 5px;font-size:16px;font-weight:680;letter-spacing:-.024em;color:#263d33}
+.booked-edit-hint{font-size:12px;line-height:1.6;margin:0 0 20px;color:#788a7e}
+.booked-edit-fields label{display:block;margin:14px 0 7px;font-size:12px;font-weight:650;color:#334b3d}
+.booked-edit-fields input,.booked-edit-fields textarea{display:block;width:100%;max-width:100%;box-sizing:border-box;font:inherit;font-size:14px;line-height:1.45;background:#fff;border:1px solid #d8e4da;border-radius:8px;padding:12px 13px;color:#20372d}
+.booked-edit-fields textarea{resize:vertical;min-height:85px}
+.booked-edit-fields input:focus,.booked-edit-fields textarea:focus{outline:2px solid #9EF5C3;outline-offset:1px}
+.booked-edit-buttons{display:grid;grid-template-columns:1fr 1.45fr;gap:9px;margin-top:20px}
+.booked-edit-cancel,.booked-edit-save{padding:13px 10px;border-radius:8px;min-height:45px;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.booked-edit-cancel{background:#fff;color:#50675b;border:1px solid #d8e4da}
+.booked-edit-save{background:#9EF5C3;color:#171b2a;border:1px solid #6fdc9f}
+.booked-edit-save:hover:not(:disabled){background:#85edb1}
+.booked-edit-save:disabled{opacity:.6;cursor:wait}
+.booked-edit-error{font-size:12px;line-height:1.5;color:#a24838;margin:11px 0 0}
+.booked-edit-success{background:#e6f9ee;border:1px solid #b1e4c4;border-radius:9px;padding:13px 15px;font-size:12px;line-height:1.55;color:#205d3f;margin:15px 0 0;text-align:left}
+@media(max-width:480px){.booked-edit-form{padding:17px 15px}.booked-edit-fields input,.booked-edit-fields textarea{font-size:16px}}
+
 </style>
 </head>
 <body>
@@ -372,7 +395,24 @@ footer .footer-sep{color:#a1b2a8}
    <div class="booked-directions"><a id="bookedDirections" target="_blank" rel="noopener noreferrer" href="https://maps.app.goo.gl/sH9GpLzf94pWavqj9?g_st=ic">Get directions <span aria-hidden="true">↗</span></a></div>
    <div class="booked-detail"><span>Participant</span><strong id="bookedParticipant"></strong></div>
    <div class="booked-detail"><span>Confirmation email</span><strong id="bookedEmail"></strong></div>
+   <div class="booked-edit-row"><button type="button" id="editInfoToggle" class="booked-edit-toggle" aria-expanded="false" aria-controls="editBookingForm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1L20 7.5 16.5 4 5 15.5 4 20Z"/></svg>Edit information</button></div>
   </div>
+  <form id="editBookingForm" class="booked-edit-form hidden">
+   <h2>Edit lesson information</h2>
+   <p class="booked-edit-hint">Update your contact details or add a note for the coach. We’ll update your calendar invitation, too.</p>
+   <div class="booked-edit-fields">
+    <label for="editKid">Participant name</label><input id="editKid" name="kidName" required maxlength="100" autocomplete="name" placeholder="Participant name">
+    <label for="editEmail">Confirmation email</label><input id="editEmail" name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+    <label for="editPhone">Phone number</label><input id="editPhone" name="phone" type="tel" required autocomplete="tel" placeholder="+1 (555) 000-0000">
+    <label for="editNotes">Any notes? <span class="optional-note">(optional)</span></label><textarea id="editNotes" name="notes" maxlength="500" rows="3" placeholder="Anything you'd like your coach to know?"></textarea>
+   </div>
+   <div class="booked-edit-buttons">
+    <button type="button" id="editInfoCancel" class="booked-edit-cancel">Cancel</button>
+    <button type="submit" id="saveEditedBooking" class="booked-edit-save">Save changes</button>
+   </div>
+   <p id="editInfoError" class="booked-edit-error hidden" role="alert"></p>
+  </form>
+  <p id="editInfoSuccess" class="booked-edit-success hidden" role="status"></p>
   <div class="booked-actions">
    <button type="button" class="action booked-manage" id="bookedManage">Manage booking <span aria-hidden="true">→</span></button>
    <button type="button" class="booked-secondary" data-go="booking">Book another lesson</button>
@@ -508,7 +548,7 @@ $('bookingForm').onsubmit=async e=>{
  const b=$('confirmBtn');b.disabled=true;clearMessage();const data=Object.fromEntries(new FormData(e.currentTarget));
  try{
   const v=await api('book',{...data,duration:state.duration,slotId:state.chosen.id});
-  state.confirmedBooking={...v,kidName:data.kidName,email:data.email,phone:data.phone};
+  state.confirmedBooking={...v,kidName:data.kidName,email:data.email,phone:data.phone,notes:data.notes||''};
   $('bookingForm').reset();state.chosen=null;
   showBookedConfirmation(state.confirmedBooking);
  }
@@ -537,9 +577,66 @@ function showBookedConfirmation(booking){
   :'Thank you for booking! Your confirmation email and calendar invitation are on their way.';
  $('bookedParticipant').textContent=booking.kidName;
  $('bookedEmail').textContent=booking.email;
+ $('editInfoToggle').classList.toggle('hidden',!booking.editToken);
+ $('editBookingForm').classList.add('hidden');
+ $('editInfoToggle').setAttribute('aria-expanded','false');
+ $('editInfoSuccess').classList.add('hidden');
  navigate('booked');
  $('bookedHeading').focus({preventScroll:true});
 }
+
+function closeBookedEditor(){
+ $('editBookingForm').classList.add('hidden');
+ $('editInfoToggle').setAttribute('aria-expanded','false');
+ $('editInfoError').classList.add('hidden');
+ $('editInfoToggle').focus({preventScroll:true});
+}
+$('editInfoToggle').onclick=()=>{
+ const current=state.confirmedBooking;
+ if(!current?.editToken)return;
+ const form=$('editBookingForm');
+ const willOpen=form.classList.contains('hidden');
+ $('editInfoSuccess').classList.add('hidden');
+ $('editInfoError').classList.add('hidden');
+ if(!willOpen)return closeBookedEditor();
+ $('editKid').value=current.kidName||'';
+ $('editEmail').value=current.email||'';
+ $('editPhone').value=current.phone||'';
+ $('editNotes').value=current.notes||'';
+ form.classList.remove('hidden');
+ $('editInfoToggle').setAttribute('aria-expanded','true');
+ form.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+$('editInfoCancel').onclick=closeBookedEditor;
+$('editBookingForm').onsubmit=async e=>{
+ e.preventDefault();
+ const current=state.confirmedBooking;
+ if(!current?.bookingId||!current?.editToken)return;
+ const btn=$('saveEditedBooking');
+ const err=$('editInfoError');
+ err.classList.add('hidden');
+ btn.disabled=true;btn.textContent='Saving…';
+ try{
+  const details=Object.fromEntries(new FormData(e.currentTarget));
+  const result=await api('editBooking',{bookingId:current.bookingId,editToken:current.editToken,...details});
+  const updated={...current,...result.booking,confirmationEmailSent:result.confirmationEmailSent};
+  state.confirmedBooking=updated;
+  $('bookedParticipant').textContent=updated.kidName;
+  $('bookedEmail').textContent=updated.email;
+  $('editBookingForm').classList.add('hidden');
+  $('editInfoToggle').setAttribute('aria-expanded','false');
+  const notice=$('editInfoSuccess');
+  notice.textContent=result.confirmationEmailSent
+   ?'Information updated. A revised confirmation was sent to '+updated.email+'.'
+   :'Information updated, but email delivery could not be confirmed. Please check your calendar or contact Ponfe.';
+  notice.classList.remove('hidden');
+  notice.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }catch(error){
+  err.textContent=error.message||'Could not update your booking. Please try again.';
+  err.classList.remove('hidden');
+ }finally{btn.disabled=false;btn.textContent='Save changes'}
+};
+
 $('bookedManage').onclick=()=>{
  const confirmed=state.confirmedBooking;
  if(confirmed){
