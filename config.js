@@ -4,7 +4,7 @@
 window.APPOINTMENT_APP = {
   title: 'Waterpolo Lesson Schedule',
   homeTitle: 'Book a Session',
-  homeSubtitle: 'Water polo coaching · Private lessons',
+  homeSubtitle: 'Water polo coaching',
   participantLabel: 'Participant name',
   contactLabel: 'Contact email',
   providerLabel: 'Provider',
