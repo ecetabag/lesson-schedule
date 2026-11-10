@@ -72,17 +72,6 @@ body.booking-layout main{max-width:1020px}
 }
 @media(max-width:420px){.times-sidebar .time-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-legend{gap:10px}.day{min-height:40px}}
 
-.waitlist-callout{margin-top:27px;border:1px solid #dce5dd;border-radius:17px;padding:22px 24px;background:#f5f8f4}
-.waitlist-callout h3{font-size:18px;letter-spacing:-.028em;font-weight:650;margin:10px 0 8px;color:#24413b}
-.waitlist-callout p{font-size:12px;line-height:1.6;color:#86968c;margin:0 0 15px}
-.waitlist-toggle{border:1px solid #a6bdac;border-radius:10px;background:transparent;color:#275745;padding:11px 15px;font-weight:650;font-size:13px;cursor:pointer}
-.waitlist-toggle span{padding-left:12px;font-size:16px}
-.waitlist-callout .label{margin:17px 0 8px}
-.waitlist-callout .action{margin-top:17px}
-.consent{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.55;color:#506c5c;margin-top:17px}
-.consent input{width:18px;height:18px;flex-shrink:0;margin:0;accent-color:#285449}
-@media(min-width:721px){.waitlist-callout{margin-top:22px}}
-
 /* Two compact, squared-off appointment choices on the homepage. */
 .home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:33px}
 .home-actions .choice{display:flex;flex-direction:column;align-items:flex-start;position:relative;min-height:196px;padding:21px;border-radius:9px;margin:0;gap:16px}
@@ -121,48 +110,64 @@ body.booking-layout main{max-width:1020px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:400px){.ondeck-header-logo{width:151px}}
 
-/* Compact responsive waitlist card: no horizontal overflow or cramped controls. */
-.waitlist-callout{margin-top:24px;padding:19px 20px;border:1px solid #dce5de;border-radius:14px;background:#fff;min-width:0}
-.waitlist-top{display:flex;align-items:center;gap:14px;min-width:0}
-.waitlist-bell{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;border-radius:12px;background:#eaf5ed;border:1px solid #d3e7d8}
-.waitlist-bell svg{width:22px;height:22px;fill:none;stroke:#3d7359;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+
+/* Restrained, product-style typography and spacing across screens. */
+main{padding-top:clamp(32px,5vw,62px)}
+#home h1,#booking h1,#manage h1,#coach h1{
+ font-size:clamp(23px,2.8vw,30px);
+ font-weight:620;
+ line-height:1.24;
+ letter-spacing:-.028em;
+ margin:0 0 8px;
+}
+.screen .eyebrow{font-size:10px;letter-spacing:.11em;margin-bottom:11px;color:#778b81}
+.screen p.intro{font-size:13px;line-height:1.6;max-width:620px;margin:0 0 23px;color:#72847d}
+#home .home-actions{margin-top:23px}
+#booking .booking-columns{margin-top:19px}
+#booking .label,#manage .label,#coach .label{font-size:12px}
+.times-sidebar h2{font-size:17px;letter-spacing:-.02em}
+.coach-subtitle h2{font-size:16px;letter-spacing:-.016em}
+
+/* Calm, single-CTA waitlist, aligned on every screen size. */
+.waitlist-callout{margin:24px 0 0;padding:20px 22px;min-width:0;border:1px solid #dfe6e0;border-radius:11px;background:#fbfcfa}
+.waitlist-top{display:flex;gap:20px;align-items:center;justify-content:space-between;min-width:0}
 .waitlist-copy{flex:1;min-width:0}
-.waitlist-copy .times-eyebrow{font-size:9px;letter-spacing:.115em}
-.waitlist-callout h3{margin:5px 0 3px;color:#203e36;font-size:17px;line-height:1.24;letter-spacing:-.035em}
-.waitlist-callout .waitlist-copy p{font-size:12px;color:#81958a;line-height:1.45;margin:0}
-.waitlist-toggle{margin:0;display:flex;align-items:center;justify-content:center;gap:9px;flex:0 0 auto;border:1px solid #abc4b3;background:#eef6ef;color:#2d654a;border-radius:9px;min-height:42px;padding:10px 13px;font-weight:650;font-size:12px;white-space:nowrap;cursor:pointer}
-.waitlist-toggle:hover{background:#e3f0e6;border-color:#7ea68d}
-.waitlist-toggle .waitlist-toggle-symbol{padding:0;display:grid;place-items:center;font-size:17px;line-height:1;width:17px;height:17px}
-.waitlist-toggle[aria-expanded="true"]{background:#dfeee3;border-color:#7ea68d}
-.waitlist-callout #waitlistForm{border-top:1px solid #e6ede7;margin-top:19px;padding-top:18px;min-width:0}
-.waitlist-callout .waitlist-intro{font-size:12px;line-height:1.55;margin:0;color:#809186}
-.waitlist-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 13px;min-width:0}
+.waitlist-callout h3{color:#283f39;font-size:15px;font-weight:650;letter-spacing:-.014em;line-height:1.3;margin:0 0 4px}
+.waitlist-callout .waitlist-copy p{color:#75877c;font-size:12px;line-height:1.45;margin:0}
+.waitlist-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;max-width:100%;white-space:nowrap;min-height:42px;padding:10px 16px;border:1px solid #36594e;border-radius:7px;background:#fff;color:#284a40;font:inherit;font-size:12px;font-weight:620;line-height:1.3;cursor:pointer;transition:background .15s ease}
+.waitlist-toggle:hover{background:#edf4ee}
+.waitlist-toggle:focus-visible{outline:3px solid #8eafa0;outline-offset:3px}
+.waitlist-toggle[aria-expanded="true"]{background:#eaf2ec}
+.waitlist-callout #waitlistForm{border-top:1px solid #e4eae5;margin-top:19px;padding-top:17px;min-width:0}
+.waitlist-callout .waitlist-intro{font-size:12px;color:#74867b;line-height:1.55;margin:0 0 3px}
+.waitlist-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;min-width:0}
 .waitlist-fields>div{min-width:0}
 .waitlist-fields>div:last-child{grid-column:1/-1}
-.waitlist-callout .label{margin:14px 0 7px;font-size:12px}
-.waitlist-fields input{width:100%;min-width:0;max-width:100%;font-size:16px;padding:13px 12px;min-height:48px;border-radius:9px;box-sizing:border-box}
-.waitlist-callout .consent{display:flex;align-items:flex-start;gap:11px;min-width:0;margin-top:18px;color:#536d60;font-size:12px;line-height:1.5}
-.waitlist-callout .consent input{width:19px;height:19px;min-width:19px;max-width:19px;margin:0;accent-color:#2e6a4e}
+.waitlist-callout .label{display:block;margin:14px 0 7px;font-size:12px}
+.waitlist-fields input{display:block;box-sizing:border-box;min-width:0;width:100%;max-width:100%;height:47px;border-radius:7px;padding:11px 12px;font-size:16px}
+.waitlist-callout .consent{display:flex;align-items:flex-start;gap:10px;min-width:0;font-size:12px;line-height:1.5;color:#657a6d;margin-top:17px}
+.waitlist-callout .consent input{display:block;flex:0 0 19px;width:19px;height:19px;min-width:19px;margin:0;accent-color:#345d4c}
 .waitlist-callout .consent span{min-width:0;overflow-wrap:break-word}
-.waitlist-callout .action{margin:18px 0 0;min-height:49px;border-radius:9px;padding:13px 15px;font-size:13px}
+.waitlist-callout .action{display:block;width:100%;margin-top:18px;min-height:45px;font-size:13px;border-radius:7px;padding:12px 16px}
 footer{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap}
 footer .footer-brand{font-weight:700;color:#617b6e}
 footer .footer-sep{color:#a1b2a8}
 @media(max-width:720px){
- .waitlist-callout{padding:16px;margin-top:19px;border-radius:12px}
- .waitlist-top{display:grid;grid-template-columns:40px minmax(0,1fr);gap:11px;align-items:center}
- .waitlist-bell{width:40px;height:40px;flex-basis:40px;border-radius:10px}
- .waitlist-copy .times-eyebrow{font-size:9px}
- .waitlist-callout h3{font-size:16px;margin-top:4px}
- .waitlist-callout .waitlist-copy p{font-size:11px;line-height:1.45}
- .waitlist-toggle{grid-column:1/-1;width:100%;min-height:45px;margin-top:3px;font-size:13px;justify-content:space-between;padding:10px 13px}
- .waitlist-callout #waitlistForm{margin-top:15px;padding-top:16px}
- .waitlist-fields{grid-template-columns:minmax(0,1fr);gap:0}
+ .waitlist-callout{margin-top:20px;padding:17px}
+ .waitlist-top{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+ .waitlist-toggle{width:100%;min-height:46px;font-size:13px}
+ .waitlist-fields{grid-template-columns:minmax(0,1fr)}
  .waitlist-fields>div:last-child{grid-column:auto}
- .waitlist-fields input{min-height:48px}
- .waitlist-callout .consent{font-size:11px}
 }
-
+@media(max-width:480px){
+ main{padding-top:34px}
+ #home h1,#booking h1,#manage h1,#coach h1{font-size:23px}
+ .screen p.intro{margin-bottom:21px}
+ .waitlist-callout{padding:16px}
+ .waitlist-callout h3{font-size:14px}
+ .waitlist-callout .waitlist-copy p{font-size:12px}
+ .waitlist-callout #waitlistForm{margin-top:15px;padding-top:15px}
+}
 </style>
 </head>
 <body>
@@ -174,7 +179,7 @@ footer .footer-sep{color:#a1b2a8}
 <button class="choice" data-go="manage"><span class="glyph"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M14 13l3 3-3 3M17 16H8"/></svg></span><span class="description"><b>Manage a lesson</b><span>Find and reschedule your lesson</span></span><span class="arrow">→</span></button>
 </div>
 </section>
-<section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW LESSON</div><h1>Find a time.</h1><p class="intro">Select your lesson length and an available date.</p>
+<section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW LESSON</div><h1>Book a lesson</h1><p class="intro">Select your lesson length and an available date.</p>
 <div class="label">Lesson duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute lesson</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute lesson</small></button></div>
 <div class="booking-columns">
  <div class="calendar-column">
@@ -191,28 +196,26 @@ footer .footer-sep{color:#a1b2a8}
 </div>
 <section class="waitlist-callout" id="waitlistSection">
  <div class="waitlist-top">
-  <span class="waitlist-bell" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg></span>
   <div class="waitlist-copy">
-   <div class="times-eyebrow">CAN'T FIND A TIME?</div>
-   <h3>Join the waitlist</h3>
-   <p>We'll email you if a lesson spot opens up.</p>
+   <h3>Can't find a suitable time?</h3>
+   <p>Get an email when a lesson spot becomes available.</p>
   </div>
-  <button class="waitlist-toggle" id="waitlistToggle" type="button" aria-expanded="false" aria-controls="waitlistForm"><span class="waitlist-toggle-label">Join waitlist</span><span class="waitlist-toggle-symbol" aria-hidden="true">+</span></button>
+  <button class="waitlist-toggle" id="waitlistToggle" type="button" aria-expanded="false" aria-controls="waitlistForm">Join waitlist</button>
  </div>
  <form id="waitlistForm" class="hidden">
-  <p class="waitlist-intro">Choose a preferred day and we'll let you know if a lesson time becomes available.</p>
+  <p class="waitlist-intro">Choose a date and we'll notify you if a spot opens. This does not reserve a lesson.</p>
   <div class="waitlist-fields">
    <div><label class="label" for="waitlistDate">Preferred date</label><input id="waitlistDate" type="date" required></div>
    <div><label class="label" for="waitlistPerson">Participant name</label><input id="waitlistPerson" maxlength="100" autocomplete="name" required placeholder="Participant name"></div>
    <div><label class="label" for="waitlistEmail">Email for notifications</label><input id="waitlistEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
   </div>
-  <label class="consent"><input id="waitlistConsent" type="checkbox" required><span>Email me once if a lesson opens on this date. I understand this does not reserve a spot.</span></label>
-  <button class="action" type="submit" id="waitlistSubmit">Notify me about a spot <span aria-hidden="true">→</span></button>
+  <label class="consent"><input id="waitlistConsent" type="checkbox" required><span>Email me if a lesson opens on this date. I understand no time is reserved.</span></label>
+  <button class="action" type="submit" id="waitlistSubmit">Notify me</button>
  </form>
 </section>
 <form id="bookingForm" class="hidden"><div class="divider"></div><div class="label" id="clientNameLabel">Participant name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Participant name"><div class="label" id="contactEmailLabel">Contact email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><button class="action" type="submit" id="confirmBtn">Confirm lesson →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
 </section>
-<section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE LESSON</div><h1>Change a lesson.</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
+<section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE LESSON</div><h1>Manage a lesson</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
 <form id="lookupForm"><label class="label" for="phone">Contact phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><label class="label" for="kid">Participant name</label><input id="kid" name="kidName" required placeholder="Participant name"><button type="submit" id="requestBtn" class="action">Send verification code →</button></form>
 <form id="verifyForm" class="hidden"><label class="label" for="code">Email verification code</label><input id="code" name="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required placeholder="6-digit code"><button id="verifyBtn" type="submit" class="action">Verify and view lessons →</button></form>
 <div id="appointments" class="hidden"><div class="label">Your upcoming lessons</div><div id="appointmentList"></div></div>
@@ -221,7 +224,7 @@ footer .footer-sep{color:#a1b2a8}
 
 <section id="coach" class="screen">
 <button class="back" type="button" data-go="home">← Back</button>
-<div class="eyebrow">PROVIDER PORTAL</div><h1>Manage availability.</h1>
+<div class="eyebrow">PROVIDER PORTAL</div><h1>Coach availability</h1>
 <p class="intro">Sign in with your approved provider email. Set your available hours here, and bookable lesson times will appear on the public calendar automatically.</p>
 <form id="coachEmailForm">
  <label class="label" for="coachEmail">Provider email</label>
@@ -457,7 +460,7 @@ $('coachDate').min=$('coachDate').value;
 $('waitlistToggle').onclick=()=>{
  const open=$('waitlistForm').classList.toggle('hidden')===false;
  $('waitlistToggle').setAttribute('aria-expanded',String(open));
- $('waitlistToggle').querySelector('.waitlist-toggle-symbol').textContent=open?'−':'+';
+ $('waitlistToggle').textContent=open?'Close waitlist':'Join waitlist';
  if(open){$('waitlistDate').value=state.day||dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());}
 };
 $('waitlistDate').min=dateKey(new Date().getFullYear(),new Date().getMonth(),new Date().getDate());
@@ -465,7 +468,7 @@ $('waitlistForm').onsubmit=async e=>{
  e.preventDefault();clearMessage();const btn=$('waitlistSubmit');btn.disabled=true;
  try{
   const result=await api('waitlistJoin',{date:$('waitlistDate').value,duration:state.duration,participant:$('waitlistPerson').value.trim(),email:$('waitlistEmail').value.trim(),consent:$('waitlistConsent').checked});
-  message(result.message,true);$('waitlistForm').reset();$('waitlistForm').classList.add('hidden');$('waitlistToggle').setAttribute('aria-expanded','false');$('waitlistToggle').querySelector('.waitlist-toggle-symbol').textContent='+';
+  message(result.message,true);$('waitlistForm').reset();$('waitlistForm').classList.add('hidden');$('waitlistToggle').setAttribute('aria-expanded','false');$('waitlistToggle').textContent='Join waitlist';
  }catch(err){message(err.message)}finally{btn.disabled=false}
 };
 if(new URLSearchParams(location.search).has('unsubscribe')){
