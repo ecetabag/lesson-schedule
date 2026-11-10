@@ -206,11 +206,100 @@ async function lockDay(day,work) {
  if(ok!=='OK')throw fail(409,'A booking is being processed. Please try again.');
  try{return await work();}finally{await redis([['EVAL',"if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end",1,key,token]]).catch(()=>{});}
 }
-async function mail(token,to,subject,body) {
- const message=['To: '+to,'Subject: '+subject,'MIME-Version: 1.0','Content-Type: text/plain; charset=UTF-8','',''+body].join('\r\n');
- const raw=Buffer.from(message).toString('base64url');
+async function mail(token,to,subject,body,html=null) {
+ // Encode the subject and MIME bodies so names, punctuation and links render consistently.
+ const subjectHeader='=?UTF-8?B?'+Buffer.from(String(subject).replace(/[\r\n]/g,' '),'utf8').toString('base64')+'?=';
+ const headers=['To: '+String(to).replace(/[\r\n]/g,''),'Subject: '+subjectHeader,'MIME-Version: 1.0'];
+ let message;
+ if(html){
+  const boundary='ondeck_'+crypto.randomBytes(12).toString('hex');
+  message=[...headers,'Content-Type: multipart/alternative; boundary="'+boundary+'"','',
+   '--'+boundary,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',
+   Buffer.from(body,'utf8').toString('base64'),
+   '--'+boundary,'Content-Type: text/html; charset=UTF-8','Content-Transfer-Encoding: base64','',
+   Buffer.from(html,'utf8').toString('base64'),
+   '--'+boundary+'--',''].join('\r\n');
+ }else{
+  message=[...headers,'Content-Type: text/plain; charset=UTF-8','',''+body].join('\r\n');
+ }
+ const raw=Buffer.from(message,'utf8').toString('base64url');
  await google(token,'POST','https://gmail.googleapis.com/gmail/v1/users/me/messages/send',{raw});
 }
+
+/* OnDeck transactional emails. Use conservative table markup + inline CSS for email clients. */
+const escapeEmailHtml = value => String(value??'').replace(/[&<>"']/g,ch=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+})[ch]);
+const bookingFriendlyDate = date => new Date(date+'T12:00:00Z').toLocaleDateString('en-US',{
+ weekday:'long',month:'long',day:'numeric',year:'numeric',timeZone:'UTC'
+});
+const bookingFriendlyTime = value => {
+ const [h,m]=String(value).split(':').map(Number);
+ return (h%12||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM');
+};
+const durationLabel = n => Number(n)===90?'1 hour 30 minutes':'1 hour';
+const BOOKING_MANAGE_LINK='https://lesson-schedule-lake.vercel.app/?view=manage';
+const BOOKING_HOME_LINK='https://lesson-schedule-lake.vercel.app/';
+function emailDetailRow(label,value){
+ return '<tr><td style="padding:9px 0;color:#798a80;font-size:13px;vertical-align:top;width:38%;">'+escapeEmailHtml(label)+
+ '</td><td style="padding:9px 0;color:#263b34;font-size:13px;line-height:1.5;font-weight:600;text-align:right;vertical-align:top;word-break:break-word;">'+escapeEmailHtml(value)+'</td></tr>';
+}
+function designedEmail(title,lead,details,links,closing,badge){
+ const button=links.map(link=>'<a href="'+escapeEmailHtml(link.url)+'" style="display:inline-block;box-sizing:border-box;padding:14px 22px;margin:0 8px 10px 0;background:'+
+ (link.secondary?'#f6f9f5':'#9EF5C3')+';color:#171b2a;border:1px solid '+(link.secondary?'#dce6df':'#88ddaE')+
+ ';border-radius:8px;font-weight:700;text-decoration:none;font-size:13px;">'+escapeEmailHtml(link.text)+'</a>').join('');
+ return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
+ '<body style="margin:0;padding:30px 12px;background:#f6f8f5;color:#243a35;font-family:Arial,Helvetica,sans-serif;">'+
+ '<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;width:100%;margin:0 auto;background:#ffffff;border:1px solid #e1eae3;border-radius:16px;overflow:hidden;">'+
+ '<tr><td style="padding:22px 28px;background:#171b2a;color:#ffffff;font-size:23px;font-weight:750;letter-spacing:-.8px;">'+
+ '<span style="color:#9EF5C3;">◆</span> OnDeck</td></tr>'+
+ '<tr><td style="padding:30px 28px 31px;">'+
+ '<div style="display:inline-block;background:#e8fbed;border:1px solid #b9e9c8;border-radius:20px;padding:7px 11px;color:#256a45;font-size:11px;font-weight:700;letter-spacing:.5px;">'+escapeEmailHtml(badge)+'</div>'+
+ '<h1 style="font-size:24px;line-height:1.28;letter-spacing:-.55px;margin:16px 0 10px;color:#192f29;font-weight:700;">'+escapeEmailHtml(title)+'</h1>'+
+ '<p style="font-size:14px;line-height:1.75;color:#67796d;margin:0 0 22px;">'+escapeEmailHtml(lead)+'</p>'+
+ '<div style="background:#fafbf9;border:1px solid #e1e9e2;border-radius:10px;padding:14px 18px;margin:0 0 23px;">'+
+ '<p style="font-size:10px;letter-spacing:1.6px;color:#839489;font-weight:700;margin:0 0 9px;">LESSON DETAILS</p>'+
+ '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">'+details+'</table></div>'+
+ '<div style="margin:0 0 14px;">'+button+'</div>'+
+ '<p style="font-size:13px;color:#657a6b;line-height:1.75;margin:8px 0 0;">'+closing+'</p>'+
+ '</td></tr>'+
+ '<tr><td style="padding:17px 28px;background:#f5f8f5;color:#87968c;font-size:11px;">OnDeck · Scheduling pages, made for you.</td></tr>'+
+ '</table></body></html>';
+}
+function bookingEmailTemplates(b){
+ const date=bookingFriendlyDate(b.date),time=bookingFriendlyTime(b.start)+' – '+bookingFriendlyTime(b.end);
+ const directions=directionsFor(b.location),notes=b.notes||'';
+ const baseRows=emailDetailRow('Date',date)+emailDetailRow('Time',time)+
+  emailDetailRow('Duration',durationLabel(b.duration))+emailDetailRow('Location',b.location)+
+  emailDetailRow('Participant',b.kid);
+ const clientRows=baseRows+(notes?emailDetailRow('Notes',notes):'');
+ const coachRows=baseRows+emailDetailRow('Parent email',b.email)+emailDetailRow('Parent phone',b.phone)+
+  (notes?emailDetailRow('Notes',notes):'');
+ const clientPlain='Thank you for booking a private water polo lesson!\n\nYour lesson is confirmed.\n\n'+
+  'Participant: '+b.kid+'\nDate: '+date+'\nTime: '+time+'\nDuration: '+durationLabel(b.duration)+
+  '\nLocation: '+b.location+(notes?'\nNotes: '+notes:'')+
+  '\n\nDirections: '+directions+
+  '\nAdditional pool directions: '+COACH_MAP_LINK+
+  '\n\nIf you need to change or modify your lesson, manage your booking here: '+BOOKING_MANAGE_LINK+
+  '\nYou can reach me at (510) 356-7916.\n\nSee you at the pool!\nAlbert';
+ const coachPlain='New private lesson booked: '+date+'\n\n'+
+  'Time: '+time+'\nDuration: '+durationLabel(b.duration)+'\nLocation: '+b.location+
+  '\nParticipant: '+b.kid+'\nParent email: '+b.email+'\nParent phone: '+b.phone+
+  (notes?'\nNotes: '+notes:'')+
+  '\n\nDirections: '+directions+'\nAdditional pool directions: '+COACH_MAP_LINK+
+  '\n\nBooking ID: '+b.bookingId+'\nOpen bookings: '+BOOKING_HOME_LINK;
+ const clientHtml=designedEmail('Your private lesson is booked!',
+  'Thank you for booking a private water polo lesson. Here are your details:',
+  clientRows,[{text:'Manage your lesson',url:BOOKING_MANAGE_LINK},{text:'Get directions',url:directions,secondary:true}],
+  'Need to change anything? Use the Manage lesson button above, or call or text Albert at <a href="tel:+15103567916" style="color:#24543d;font-weight:700;">(510) 356-7916</a>.<br>See you at the pool!', '✓ CONFIRMED');
+ const coachHtml=designedEmail('New private lesson booked',
+  'A new water polo lesson has been confirmed for '+date+'.',
+  coachRows,[{text:'View booking page',url:BOOKING_HOME_LINK},{text:'Directions',url:directions,secondary:true}],
+  'Booking ID: '+escapeEmailHtml(b.bookingId)+'<br>Coach phone: (510) 356-7916.', 'NEW BOOKING');
+ return {client:{subject:'Your private water polo lesson is confirmed',plain:clientPlain,html:clientHtml},
+ coach:{subject:'New private lesson booked: '+date,plain:coachPlain,html:coachHtml}};
+}
+
 async function booking(token,data) {
  const duration=durationOf(data.duration),slotId=clean(data.slotId),kid=clean(data.kidName),email=clean(data.email).toLowerCase(),phone=clean(data.phone),notes=clean(data.notes);
  if(kid.length<2||kid.length>100||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!/^[+\d\s().-]{7,24}$/.test(phone))throw fail(400,'Enter the participant name, a valid email, and phone number.');
@@ -229,7 +318,16 @@ async function booking(token,data) {
    const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration,safe(notes)]];
    await sheets(token,'POST',"'Bookings'!A:O",{values},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   }catch(e){await google(token,'DELETE',calendarPath()+'/'+eventId).catch(()=>{});throw e;}
-  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ};
+  // Notifications are sent only after the calendar event and Sheet record both exist.
+  // A mail problem must not make a successful booking appear to have failed.
+  const templates=bookingEmailTemplates({bookingId,kid,email,phone,notes,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location});
+  const results=await Promise.allSettled([
+    mail(token,email,templates.client.subject,templates.client.plain,templates.client.html),
+    mail(token,COACH_GUEST_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html)
+  ]);
+  if(results[0].status==='rejected')console.error('Client booking email failed for',bookingId,results[0].reason?.message);
+  if(results[1].status==='rejected')console.error('Coach booking email failed for',bookingId,results[1].reason?.message);
+  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ,confirmationEmailSent:results[0].status==='fulfilled',coachEmailSent:results[1].status==='fulfilled'};
  });
 }
 async function findBookings(token,phone,kid) {
