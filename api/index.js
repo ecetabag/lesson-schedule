@@ -312,7 +312,7 @@ async function booking(token,data) {
   if(!slot)throw fail(409,'That lesson time is no longer available.');
   const bookingId=crypto.randomUUID().replaceAll('-',''),eventId=bookingId;
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  const event={id:eventId,summary:'Waterpolo Lesson',location:slot.location,description:eventDetails(bookingId,notes,slot.location),start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[...new Set([email,COACH_GUEST_EMAIL])].map(address=>({email:address}))};
+  const event={id:eventId,summary:'Waterpolo Private',location:slot.location,description:eventDetails(bookingId,notes,slot.location),start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[...new Set([email,COACH_GUEST_EMAIL])].map(address=>({email:address}))};
   await google(token,'POST',calendarPath(),event,{sendUpdates:'all'});
   try{
    const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration,safe(notes)]];
@@ -392,7 +392,7 @@ async function reschedule(token,data){
   if(!slot)throw fail(409,'That time is no longer available.');
   const before=await google(token,'GET',calendarPath()+'/'+encodeURIComponent(current.event));
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},location:slot.location,summary:'Waterpolo Lesson',description:eventDetails(current.id,(before.description||'').split('Notes for coach:\n')[1]?.split('\n\nDirections to the lesson:')[0]||'',slot.location),attendees:[...new Set([...(before.attendees||[]).map(a=>a.email).filter(Boolean),COACH_GUEST_EMAIL])].map(address=>({email:address}))},{sendUpdates:'all'});
+  await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},location:slot.location,summary:'Waterpolo Private',description:eventDetails(current.id,(before.description||'').split('Notes for coach:\n')[1]?.split('\n\nDirections to the lesson:')[0]||'',slot.location),attendees:[...new Set([...(before.attendees||[]).map(a=>a.email).filter(Boolean),COACH_GUEST_EMAIL])].map(address=>({email:address}))},{sendUpdates:'all'});
   try{
    await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values:batchUpdate',{
     valueInputOption:'RAW',
