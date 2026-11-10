@@ -274,6 +274,31 @@ footer .footer-sep{color:#a1b2a8}
 .optional-note{color:#8b9a92;font-size:11px;font-weight:400}
 .notes-hint{margin:7px 0 0;color:#8b9a92;font-size:11px;line-height:1.5}
 @media(max-width:480px){#bookingNotes{min-height:88px;font-size:16px}}
+
+/* Dedicated confirmation view – not an inline banner over the calendar. */
+#booked{max-width:500px;margin:0 auto}
+.booking-success{text-align:center;padding:15px 0 30px}
+.booked-check{display:grid;place-items:center;margin:0 auto 17px;width:74px;height:74px;border:1px solid #76dca1;border-radius:50%;background:#dff9ea;color:#196840}
+.booked-check svg{width:39px;height:39px;fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.booked-status{display:inline-flex;gap:7px;align-items:center;justify-content:center;padding:6px 11px;background:#e5f8ea;border:1px solid #b7e9c9;border-radius:99px;color:#276742;font-size:10px;font-weight:750;letter-spacing:.12em}
+.booked-status-dot{width:6px;height:6px;border-radius:50%;background:#2b9a5b}
+#booked h1{color:#1b3230;font-size:clamp(25px,4vw,31px);font-weight:675;line-height:1.2;letter-spacing:-.033em;margin:12px 0 9px}
+.booked-lede{color:#788c80;font-size:13px;line-height:1.65;max-width:335px;margin:0 auto 25px}
+.booked-receipt{text-align:left;background:#fff;border:1px solid #dce6df;border-radius:13px;padding:23px 24px;box-shadow:0 4px 15px rgba(21,52,40,.035)}
+.booked-receipt-title{font-size:10px;color:#82968b;letter-spacing:.13em;font-weight:730;margin-bottom:14px}
+.booked-date{font-size:19px;line-height:1.38;color:#233932;font-weight:670;letter-spacing:-.022em}
+.booked-time{font-size:14px;color:#3b5d4b;margin-top:4px}
+.booked-divider{height:1px;background:#e6ebe6;margin:19px 0 15px}
+.booked-detail{display:flex;justify-content:space-between;gap:18px;padding:8px 0;align-items:flex-start;font-size:12px;line-height:1.5}
+.booked-detail span{flex:0 0 38%;color:#819187}
+.booked-detail strong{color:#2f463b;min-width:0;overflow-wrap:anywhere;text-align:right;font-weight:610}
+.booked-actions{display:grid;grid-template-columns:1fr;gap:11px;margin-top:21px}
+.booked-actions .booked-manage{margin:0;min-height:49px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px}
+.booked-secondary{background:#fff;color:#283f35;min-height:48px;padding:12px 18px;border:1px solid #d2ded5;border-radius:9px;font:inherit;font-size:13px;font-weight:620;cursor:pointer}
+.booked-secondary:hover{background:#f1f7f2;border-color:#a8c9b3}
+.booked-home{background:none;border:0;padding:12px;margin-top:15px;color:#7d9084;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:12px;cursor:pointer}
+@media(max-width:480px){.booking-success{padding-top:9px}.booked-check{width:68px;height:68px}.booked-receipt{padding:19px 17px}.booked-date{font-size:17px}.booked-detail{font-size:12px}}
+
 </style>
 </head>
 <body>
@@ -320,6 +345,31 @@ footer .footer-sep{color:#a1b2a8}
  </form>
 </section>
 <form id="bookingForm" class="hidden"><div class="divider"></div><div class="label" id="clientNameLabel">Participant name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Participant name"><div class="label" id="contactEmailLabel">Contact email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><label class="label" for="bookingNotes">Any notes? <span class="optional-note">(optional)</span></label><textarea id="bookingNotes" name="notes" maxlength="500" rows="3" placeholder="Anything you'd like your coach to know?"></textarea><p class="notes-hint">Notes will be shared with your coach.</p><button class="action" type="submit" id="confirmBtn">Confirm lesson →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
+</section>
+<section id="booked" class="screen" aria-labelledby="bookedHeading">
+ <div class="booking-success">
+  <div class="booked-check" aria-hidden="true">
+   <svg viewBox="0 0 48 48"><path d="M12 24.5 21 33l16-18"/></svg>
+  </div>
+  <div class="booked-status"><span class="booked-status-dot"></span>BOOKED</div>
+  <h1 id="bookedHeading" tabindex="-1">Lesson booked</h1>
+  <p class="booked-lede">Your lesson is confirmed. We’ve sent a calendar invitation to your email.</p>
+  <div class="booked-receipt">
+   <div class="booked-receipt-title">YOUR LESSON</div>
+   <div class="booked-date" id="bookedDate"></div>
+   <div class="booked-time" id="bookedTime"></div>
+   <div class="booked-divider"></div>
+   <div class="booked-detail"><span>Duration</span><strong id="bookedDuration"></strong></div>
+   <div class="booked-detail"><span>Location</span><strong id="bookedLocation"></strong></div>
+   <div class="booked-detail"><span>Participant</span><strong id="bookedParticipant"></strong></div>
+   <div class="booked-detail"><span>Confirmation email</span><strong id="bookedEmail"></strong></div>
+  </div>
+  <div class="booked-actions">
+   <button type="button" class="action booked-manage" id="bookedManage">Manage booking <span aria-hidden="true">→</span></button>
+   <button type="button" class="booked-secondary" data-go="booking">Book another lesson</button>
+  </div>
+  <button type="button" class="booked-home" data-go="home">Back to home</button>
+ </div>
 </section>
 <section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE LESSON</div><h1>Manage a lesson</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
 <form id="lookupForm"><label class="label" for="phone">Contact phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><label class="label" for="kid">Participant name</label><input id="kid" name="kidName" required placeholder="Participant name"><button type="submit" id="requestBtn" class="action">Send verification code →</button></form>
@@ -443,7 +493,12 @@ function renderTimes(){
 $('bookingForm').onsubmit=async e=>{
  e.preventDefault();if(!state.chosen)return message('Select an available time first.');
  const b=$('confirmBtn');b.disabled=true;clearMessage();const data=Object.fromEntries(new FormData(e.currentTarget));
- try{const v=await api('book',{...data,duration:state.duration,slotId:state.chosen.id});$('bookingForm').reset();state.chosen=null;message('Lesson booked for '+niceDate(v.date)+' at '+niceTime(v.start)+'. Your calendar invitation is on its way.',true);await loadAvailability();}
+ try{
+  const v=await api('book',{...data,duration:state.duration,slotId:state.chosen.id});
+  state.confirmedBooking={...v,kidName:data.kidName,email:data.email,phone:data.phone};
+  $('bookingForm').reset();state.chosen=null;
+  showBookedConfirmation(state.confirmedBooking);
+ }
  catch(e){message(e.message)}finally{b.disabled=false;}
 };
 $('lookupForm').onsubmit=async e=>{
@@ -456,6 +511,33 @@ $('verifyForm').onsubmit=async e=>{
  try{const result=await api('verifyCode',{...state.identity,code:$('code').value.trim()});state.verified=result.token;state.bookings=result.bookings||[];$('appointments').classList.remove('hidden');$('lookupForm').classList.add('hidden');$('verifyForm').classList.add('hidden');renderBookings();message('Verified successfully.',true);}
  catch(e){message(e.message)}finally{b.disabled=false}
 };
+
+function showBookedConfirmation(booking){
+ if(!booking||!booking.date||!booking.start)return;
+ $('bookedDate').textContent=new Date(booking.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+ $('bookedTime').textContent=niceTime(booking.start)+' – '+niceTime(booking.end);
+ $('bookedDuration').textContent=booking.duration===90?'1 hour 30 minutes':'1 hour';
+ $('bookedLocation').textContent=booking.location||'To be confirmed';
+ $('bookedParticipant').textContent=booking.kidName;
+ $('bookedEmail').textContent=booking.email;
+ navigate('booked');
+ $('bookedHeading').focus({preventScroll:true});
+}
+$('bookedManage').onclick=()=>{
+ const confirmed=state.confirmedBooking;
+ if(confirmed){
+  state.verified=null;state.identity=null;state.bookings=[];state.bookingId=null;
+  $('lookupForm').classList.remove('hidden');
+  $('verifyForm').classList.add('hidden');
+  $('appointments').classList.add('hidden');
+  $('reschedulePane').classList.add('hidden');
+  $('code').value='';
+  $('phone').value=confirmed.phone;
+  $('kid').value=confirmed.kidName;
+ }
+ navigate('manage');
+};
+
 function renderBookings(){
  const host=$('appointmentList');host.replaceChildren();
  if(!state.bookings.length){host.textContent='No upcoming lessons found.';return}
