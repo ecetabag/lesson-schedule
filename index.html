@@ -299,6 +299,14 @@ footer .footer-sep{color:#a1b2a8}
 .booked-home{background:none;border:0;padding:12px;margin-top:15px;color:#7d9084;text-decoration:underline;text-underline-offset:3px;font:inherit;font-size:12px;cursor:pointer}
 @media(max-width:480px){.booking-success{padding-top:9px}.booked-check{width:68px;height:68px}.booked-receipt{padding:19px 17px}.booked-date{font-size:17px}.booked-detail{font-size:12px}}
 
+
+#coachLocation{display:block;width:100%;min-height:49px;box-sizing:border-box;padding:12px 14px;border-radius:9px;border:1px solid #dce3df;background:#fff;color:#223b3b;font:inherit;font-size:14px;cursor:pointer}
+#coachLocation:focus-visible{outline:2px solid #9EF5C3;outline-offset:2px}
+.booked-directions{margin:7px 0 9px;text-align:right}
+.booked-directions a{color:#285d45;text-decoration:underline;text-underline-offset:3px;font-size:12px;font-weight:650}
+.booked-directions a:hover{color:#16462e}
+@media(max-width:480px){#coachLocation{font-size:16px}}
+
 </style>
 </head>
 <body>
@@ -353,7 +361,7 @@ footer .footer-sep{color:#a1b2a8}
   </div>
   <div class="booked-status"><span class="booked-status-dot"></span>BOOKED</div>
   <h1 id="bookedHeading" tabindex="-1">Lesson booked</h1>
-  <p class="booked-lede">Your lesson is confirmed. We’ve sent a calendar invitation to your email.</p>
+  <p class="booked-lede" id="bookedLede">Your lesson is confirmed. We’ve sent a calendar invitation to your email.</p>
   <div class="booked-receipt">
    <div class="booked-receipt-title">YOUR LESSON</div>
    <div class="booked-date" id="bookedDate"></div>
@@ -361,6 +369,7 @@ footer .footer-sep{color:#a1b2a8}
    <div class="booked-divider"></div>
    <div class="booked-detail"><span>Duration</span><strong id="bookedDuration"></strong></div>
    <div class="booked-detail"><span>Location</span><strong id="bookedLocation"></strong></div>
+   <div class="booked-directions"><a id="bookedDirections" target="_blank" rel="noopener noreferrer" href="https://maps.app.goo.gl/sH9GpLzf94pWavqj9?g_st=ic">Get directions <span aria-hidden="true">↗</span></a></div>
    <div class="booked-detail"><span>Participant</span><strong id="bookedParticipant"></strong></div>
    <div class="booked-detail"><span>Confirmation email</span><strong id="bookedEmail"></strong></div>
   </div>
@@ -401,8 +410,12 @@ footer .footer-sep{color:#a1b2a8}
    <div><label class="label" for="coachStart">Start time</label><input id="coachStart" type="time" required value="09:00" step="900"></div>
    <div><label class="label" for="coachEnd">End time</label><input id="coachEnd" type="time" required value="12:00" step="900"></div>
   </div>
-  <label class="label" for="coachLocation">Pool / location</label>
-  <input id="coachLocation" maxlength="120" value="Pool" required placeholder="Pool name">
+  <label class="label" for="coachLocation">Pick a location</label>
+  <select id="coachLocation" name="coachLocation" required>
+   <option value="" disabled selected>Select a pool</option>
+   <option value="tam-high">Tam High — Mill Valley</option>
+   <option value="terra-linda-high">Terra Linda High School — San Rafael</option>
+  </select>
   <button class="action" id="coachSaveBtn" type="submit">Add teaching window →</button>
   <p class="small">Select the hours you are available. Visitors can book 1-hour or 1.5-hour lessons within these windows.</p>
  </form>
@@ -518,6 +531,10 @@ function showBookedConfirmation(booking){
  $('bookedTime').textContent=niceTime(booking.start)+' – '+niceTime(booking.end);
  $('bookedDuration').textContent=booking.duration===90?'1 hour 30 minutes':'1 hour';
  $('bookedLocation').textContent=booking.location||'To be confirmed';
+ $('bookedDirections').href=booking.directionsUrl||'https://maps.app.goo.gl/sH9GpLzf94pWavqj9?g_st=ic';
+ $('bookedLede').textContent=booking.confirmationEmailSent===false
+  ?'Your lesson is confirmed. You can review the details below. Your calendar invitation may arrive separately.'
+  :'Thank you for booking! Your confirmation email and calendar invitation are on their way.';
  $('bookedParticipant').textContent=booking.kidName;
  $('bookedEmail').textContent=booking.email;
  navigate('booked');
@@ -669,4 +686,6 @@ if(new URLSearchParams(location.search).has('unsubscribe')){
 }
 
 renderCalendar();
+const initialPage=new URLSearchParams(location.search).get('view');
+if(initialPage==='manage'||initialPage==='booking')navigate(initialPage);
 </script></body></html>
