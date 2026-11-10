@@ -253,8 +253,8 @@ function designedEmail(title,lead,details,links,closing,badge){
  return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
  '<body style="margin:0;padding:30px 12px;background:#f6f8f5;color:#243a35;font-family:Arial,Helvetica,sans-serif;">'+
  '<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;width:100%;margin:0 auto;background:#ffffff;border:1px solid #e1eae3;border-radius:16px;overflow:hidden;">'+
- '<tr><td style="padding:22px 28px;background:#171b2a;color:#ffffff;font-size:23px;font-weight:750;letter-spacing:-.8px;">'+
- '<span style="color:#9EF5C3;">◆</span> OnDeck</td></tr>'+
+ '<tr><td style="padding:21px 28px;background:#ffffff;border-top:5px solid #171b2a;border-bottom:1px solid #e6efe7;">'+
+ '<img src="https://lesson-schedule-lake.vercel.app/ondeck-email-logo.png" alt="OnDeck" width="202" height="32" style="display:block;width:202px;height:auto;max-width:100%;border:0;outline:none;text-decoration:none;">'+'</td></tr>'+
  '<tr><td style="padding:30px 28px 31px;">'+
  '<div style="display:inline-block;background:#e8fbed;border:1px solid #b9e9c8;border-radius:20px;padding:7px 11px;color:#256a45;font-size:11px;font-weight:700;letter-spacing:.5px;">'+escapeEmailHtml(badge)+'</div>'+
  '<h1 style="font-size:24px;line-height:1.28;letter-spacing:-.55px;margin:16px 0 10px;color:#192f29;font-weight:700;">'+escapeEmailHtml(title)+'</h1>'+
@@ -283,7 +283,7 @@ function bookingEmailTemplates(b){
   '\n\nDirections: '+directions+
   '\nParking location provided by coach: '+COACH_MAP_LINK+
   '\n\nIf you need to change or modify your lesson, manage your booking here: '+BOOKING_MANAGE_LINK+
-  '\nYou can reach me at (510) 356-7916.\n\nSee you at the pool!\nAlbert';
+  '\nQuestions? Text Ponfe at (510) 356-7916.\n\nSee you at the pool!\nAlbert';
  const coachPlain='New private lesson booked: '+date+'\n\n'+
   'Time: '+time+'\nDuration: '+durationLabel(b.duration)+'\nLocation: '+b.location+
   '\nParticipant: '+b.kid+'\nParent email: '+b.email+'\nParent phone: '+b.phone+
@@ -293,7 +293,7 @@ function bookingEmailTemplates(b){
  const clientHtml=designedEmail('Your private lesson is booked!',
   'Thank you for booking a private water polo lesson. Here are your details:',
   clientRows,[{text:'Manage your lesson',url:BOOKING_MANAGE_LINK},{text:'Get directions',url:directions,secondary:true}],
-  'Need to change anything? Use the Manage lesson button above, or call or text Albert at <a href="tel:+15103567916" style="color:#24543d;font-weight:700;">(510) 356-7916</a>.<br>See you at the pool!', '✓ CONFIRMED');
+  'Need to change anything? Use the Manage lesson button above.<br>Questions? Text Ponfe at <a href="sms:+15103567916" style="color:#24543d;font-weight:700;">(510) 356-7916</a>.<br>See you at the pool!', '✓ CONFIRMED');
  const coachHtml=designedEmail('New private lesson booked',
   'A new water polo lesson has been confirmed for '+date+'.',
   coachRows,[{text:'View booking page',url:BOOKING_HOME_LINK},{text:'Directions',url:directions,secondary:true}],
@@ -314,8 +314,8 @@ function verificationEmail(code,role) {
  const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
   '<body style="margin:0;padding:28px 12px;background:#f5f7f4;font-family:Arial,Helvetica,sans-serif;color:#1a2e35;">'+
   '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3eae5;border-radius:16px;overflow:hidden;">'+
-  '<tr><td style="padding:21px 28px;background:#171b2a;color:#ffffff;font-size:24px;line-height:1.2;font-weight:700;letter-spacing:-.6px;">'+
-  '<span style="color:#9EF5C3;font-size:24px;">◆</span>&nbsp; OnDeck</td></tr>'+
+  '<tr><td style="padding:21px 28px;background:#ffffff;border-top:5px solid #171b2a;border-bottom:1px solid #e6efe7;">'+
+  '<img src="https://lesson-schedule-lake.vercel.app/ondeck-email-logo.png" alt="OnDeck" width="202" height="32" style="display:block;width:202px;height:auto;max-width:100%;border:0;outline:none;text-decoration:none;">'+'</td></tr>'+
   '<tr><td style="padding:32px 28px 28px;">'+
   '<div style="margin-bottom:14px;color:#327451;font-size:11px;font-weight:700;letter-spacing:1px;">SECURE VERIFICATION</div>'+
   '<h1 style="font-size:24px;line-height:1.25;margin:0 0 11px;color:#1a3034;font-weight:700;letter-spacing:-.5px;">'+escapeEmailHtml(title)+'</h1>'+
