@@ -39,6 +39,38 @@ button:focus-visible{outline:3px solid #9fbcaf;outline-offset:2px}
 .coach-subtitle{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:25px 0 12px}
 .coach-subtitle h2{margin:0;font-size:18px;letter-spacing:-.025em}.coach-subtitle button{border:0;background:transparent;text-decoration:underline;cursor:pointer;color:#667c72;font-size:12px}
 .coach-empty{padding:28px 15px;border:1px dashed #dce5df;border-radius:13px;color:#91a098;text-align:center;font-size:13px}
+
+body.booking-layout main{max-width:1020px}
+.booking-columns{display:grid;grid-template-columns:minmax(0,1.22fr) minmax(260px,.88fr);gap:24px;align-items:stretch;margin-top:22px}
+.booking-columns .month{margin:0 0 16px}
+.calendar-column{min-width:0}
+.calendar{gap:7px}
+.day{border-radius:11px;position:relative;font-weight:540;min-height:43px;transition:transform .13s ease,background .13s ease,border .13s ease}
+.day.available{background:#deebe2;border:2px solid #7da896;color:#1c4d3b;font-weight:750;box-shadow:0 1px 2px #7fa28f21}
+.day.available::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:4px;height:4px;background:#356e53;border-radius:50%}
+.day.available:hover{background:#cce5d5;transform:translateY(-1px)}
+.day.active,.day.active.available{background:#1e4540;color:#fff;border:2px solid #1e4540}
+.day.active::after{background:#d3eade}
+.day:disabled{opacity:1;background:#f1f2ef;color:#b9c2bc;cursor:default;border:1px solid #eef0ed;font-weight:400}
+.calendar-legend{display:flex;gap:15px;flex-wrap:wrap;margin-top:18px;color:#72847b;font-size:11px}
+.calendar-legend span{display:inline-flex;gap:6px;align-items:center}
+.calendar-legend i{height:10px;width:10px;border-radius:3px;display:inline-block}
+.legend-open{background:#deebe2;border:1px solid #7da896}.legend-selected{background:#1e4540}.legend-closed{background:#f1f2ef;border:1px solid #dce1db}
+.times-sidebar{border:1px solid #dfe7e0;background:#fff;border-radius:17px;padding:23px;min-width:0;min-height:310px}
+.times-eyebrow{font-size:10px;font-weight:750;letter-spacing:.13em;color:#82988c}
+.times-sidebar h2{font-size:19px;letter-spacing:-.035em;margin:13px 0 8px;font-weight:650}
+.times-sidebar p{font-size:12px;line-height:1.6;color:#8b9c94;margin:0}
+.times-sidebar .time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:18px}
+.times-sidebar .time{padding:13px 6px;background:#f7faf7;border-color:#dce8df;font-weight:600;white-space:nowrap}
+.times-sidebar .time:hover{border-color:#759e8c;background:#ecf5ec}
+.times-sidebar .time[aria-pressed="true"]{background:#1e4540;color:white;border-color:#1e4540}
+@media(max-width:720px){
+ body.booking-layout main{max-width:620px}
+ .booking-columns{grid-template-columns:1fr;gap:20px}
+ .times-sidebar{min-height:120px;padding:18px}
+ .times-sidebar .time-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:420px){.times-sidebar .time-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.calendar-legend{gap:10px}.day{min-height:40px}}
 </style>
 </head>
 <body>
@@ -50,8 +82,19 @@ button:focus-visible{outline:3px solid #9fbcaf;outline-offset:2px}
 </section>
 <section id="booking" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">NEW BOOKING</div><h1>Find a time.</h1><p class="intro">Select your appointment length and an available date.</p>
 <div class="label">Appointment duration</div><div class="two"><button class="duration" data-duration="60" aria-pressed="true">1 hour<small>60-minute appointment</small></button><button class="duration" data-duration="90" aria-pressed="false">1.5 hours<small>90-minute appointment</small></button></div>
-<div class="month"><button id="prevMonth" aria-label="Previous month">‹</button><b id="monthTitle"></b><button id="nextMonth" aria-label="Next month">›</button></div><div class="calendar" id="calendar"></div>
-<div id="timesWrap" class="hidden"><div class="label">Available start times</div><div id="times" class="time-grid"></div></div>
+<div class="booking-columns">
+ <div class="calendar-column">
+  <div class="month"><button id="prevMonth" aria-label="Previous month">‹</button><b id="monthTitle"></b><button id="nextMonth" aria-label="Next month">›</button></div>
+  <div class="calendar" id="calendar"></div>
+  <div class="calendar-legend"><span><i class="legend-open"></i> Available</span><span><i class="legend-selected"></i> Selected</span><span><i class="legend-closed"></i> Unavailable</span></div>
+ </div>
+ <aside id="timesWrap" class="times-sidebar">
+  <div class="times-eyebrow">AVAILABLE APPOINTMENTS</div>
+  <h2 id="timesTitle">Choose a date</h2>
+  <p id="timesHint">Select a highlighted day on the calendar to see available start times.</p>
+  <div id="times" class="time-grid"></div>
+ </aside>
+</div>
 <form id="bookingForm" class="hidden"><div class="divider"></div><div class="label" id="clientNameLabel">Participant name</div><input name="kidName" autocomplete="name" maxlength="100" required placeholder="Participant name"><div class="label" id="contactEmailLabel">Contact email</div><input name="email" type="email" required autocomplete="email" placeholder="you@example.com"><div class="label">Phone number</div><input name="phone" type="tel" autocomplete="tel" required placeholder="+1 (555) 000-0000"><button class="action" type="submit" id="confirmBtn">Confirm booking →</button><p class="small">No payment required. We'll email a calendar invitation to the address above.</p></form>
 </section>
 <section id="manage" class="screen"><button class="back" data-go="home">← Back</button><div class="eyebrow">MANAGE RESERVATION</div><h1>Change a booking.</h1><p class="intro">Enter your phone number and participant name to receive a verification code at the email address used when booking.</p>
@@ -116,7 +159,7 @@ const niceTime=t=>{const [h,m]=t.split(':').map(Number);return (h%12||12)+':'+St
 const dateKey=(y,m,d)=>[y,String(m+1).padStart(2,'0'),String(d).padStart(2,'0')].join('-');
 function message(text,success=false){const el=$('message');el.textContent=text;el.classList.add('visible');el.classList.toggle('success',success)}
 function clearMessage(){$('message').className='message';$('message').textContent=''}
-function navigate(view){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===view));clearMessage();window.scrollTo(0,0);if(view==='booking')loadAvailability();}
+function navigate(view){document.body.classList.toggle('booking-layout',view==='booking');document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===view));clearMessage();window.scrollTo(0,0);if(view==='booking')loadAvailability();}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));
 $('brand').onclick=e=>{e.preventDefault();navigate('home')};
 document.querySelectorAll('[data-duration]').forEach(b=>b.onclick=()=>{state.duration=Number(b.dataset.duration);document.querySelectorAll('[data-duration]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));state.chosen=null;state.day=null;$('bookingForm').classList.add('hidden');loadAvailability()});
@@ -129,7 +172,7 @@ async function api(action,data=null){
  return result;
 }
 async function loadAvailability(){
- $('timesWrap').classList.add('hidden');$('bookingForm').classList.add('hidden');state.chosen=null;
+ $('timesTitle').textContent='Choose a date';$('timesHint').textContent='Select a highlighted day on the calendar to see available start times.';$('times').replaceChildren();$('bookingForm').classList.add('hidden');state.chosen=null;
  try{const result=await api('availability&duration='+state.duration);state.slots=result.slots||[];renderCalendar();if(!state.slots.length)message('No available appointments right now. Please check again later.');}
  catch(e){state.slots=[];renderCalendar();message(e.message)}
 }
@@ -140,14 +183,14 @@ function renderCalendar(){
  const valid=new Set(state.slots.map(s=>s.date));
  for(let d=1;d<=new Date(year,month+1,0).getDate();d++){
   const key=dateKey(year,month,d),el=document.createElement('button');el.type='button';el.className='day';el.textContent=d;const enabled=valid.has(key);
-  el.disabled=!enabled;el.classList.toggle('available',enabled);el.classList.toggle('active',state.day===key);
+  el.disabled=!enabled;el.classList.toggle('available',enabled);el.classList.toggle('active',state.day===key);el.setAttribute('aria-label',niceDate(key)+(enabled?' — available':' — unavailable'));el.setAttribute('aria-pressed',String(state.day===key));
   el.onclick=()=>{state.day=key;state.chosen=null;renderCalendar();renderTimes();};host.append(el);
  }
 }
 $('prevMonth').onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()-1,1);renderCalendar()};
 $('nextMonth').onclick=()=>{state.month=new Date(state.month.getFullYear(),state.month.getMonth()+1,1);renderCalendar()};
 function renderTimes(){
- const host=$('times');host.replaceChildren();$('timesWrap').classList.remove('hidden');$('bookingForm').classList.add('hidden');
+ const host=$('times');host.replaceChildren();$('timesTitle').textContent=niceDate(state.day);$('timesHint').textContent='Select a start time below to continue.';$('bookingForm').classList.add('hidden');
  for(const s of state.slots.filter(s=>s.date===state.day)){
   const el=document.createElement('button');el.type='button';el.className='time';el.textContent=niceTime(s.start);el.setAttribute('aria-pressed',String(state.chosen?.id===s.id));
   el.onclick=()=>{state.chosen=s;renderTimes();$('bookingForm').classList.remove('hidden');};host.append(el);
