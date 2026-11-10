@@ -25,7 +25,7 @@ function eventDetails(bookingId,notes,location) {
   return 'Booking ID: '+bookingId+
    (notes?'\n\nNotes for coach:\n'+notes:'')+
    '\n\nDirections to the lesson: '+directionsFor(location)+
-   '\nAdditional directions provided by coach: '+COACH_MAP_LINK;
+   '\nParking location provided by coach: '+COACH_MAP_LINK;
 }
 
 const BOOKINGS = "'Bookings'!A2:N";
@@ -127,7 +127,8 @@ async function coachRequestCode(token,data,ip) {
  if(Number(count)>5||!coaches().has(email))return {message};
  const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
  await redis([['SET',coachCodeKey(email),sha(email+':'+code),'EX',600],['DEL','wp:coach:attempt:'+sha(email)]]);
- await mail(token,email,APP_TITLE+' provider sign-in code','Your sign-in code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this email.');
+ const verification=verificationEmail(code,'coach');
+ await mail(token,email,verification.subject,verification.plain,verification.html);
  return {message};
 }
 async function coachVerifyCode(data) {
@@ -280,14 +281,14 @@ function bookingEmailTemplates(b){
   'Participant: '+b.kid+'\nDate: '+date+'\nTime: '+time+'\nDuration: '+durationLabel(b.duration)+
   '\nLocation: '+b.location+(notes?'\nNotes: '+notes:'')+
   '\n\nDirections: '+directions+
-  '\nAdditional pool directions: '+COACH_MAP_LINK+
+  '\nParking location provided by coach: '+COACH_MAP_LINK+
   '\n\nIf you need to change or modify your lesson, manage your booking here: '+BOOKING_MANAGE_LINK+
   '\nYou can reach me at (510) 356-7916.\n\nSee you at the pool!\nAlbert';
  const coachPlain='New private lesson booked: '+date+'\n\n'+
   'Time: '+time+'\nDuration: '+durationLabel(b.duration)+'\nLocation: '+b.location+
   '\nParticipant: '+b.kid+'\nParent email: '+b.email+'\nParent phone: '+b.phone+
   (notes?'\nNotes: '+notes:'')+
-  '\n\nDirections: '+directions+'\nAdditional pool directions: '+COACH_MAP_LINK+
+  '\n\nDirections: '+directions+'\nParking location provided by coach: '+COACH_MAP_LINK+
   '\n\nBooking ID: '+b.bookingId+'\nOpen bookings: '+BOOKING_HOME_LINK;
  const clientHtml=designedEmail('Your private lesson is booked!',
   'Thank you for booking a private water polo lesson. Here are your details:',
@@ -299,6 +300,37 @@ function bookingEmailTemplates(b){
   'Booking ID: '+escapeEmailHtml(b.bookingId)+'<br>Coach phone: (510) 356-7916.', 'NEW BOOKING');
  return {client:{subject:'Your private water polo lesson is confirmed',plain:clientPlain,html:clientHtml},
  coach:{subject:'New private lesson booked: '+date,plain:coachPlain,html:coachHtml}};
+}
+
+
+function verificationEmail(code,role) {
+ const coach=role==='coach';
+ const title=coach?'Coach sign-in code':'Your verification code';
+ const intro=coach?'Use this code to securely sign in to your OnDeck coach dashboard.':
+   'Use this code to securely access and manage your private lesson.';
+ const plain=title+'\n\n'+intro+'\n\n'+code+
+  '\n\nThis code expires in 10 minutes. Never share it with anyone.\n\n'+
+  'If you did not request this code, you can safely ignore this email.\n\nOnDeck · Scheduling pages, made for you.';
+ const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'+
+  '<body style="margin:0;padding:28px 12px;background:#f5f7f4;font-family:Arial,Helvetica,sans-serif;color:#1a2e35;">'+
+  '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e3eae5;border-radius:16px;overflow:hidden;">'+
+  '<tr><td style="padding:21px 28px;background:#171b2a;color:#ffffff;font-size:24px;line-height:1.2;font-weight:700;letter-spacing:-.6px;">'+
+  '<span style="color:#9EF5C3;font-size:24px;">◆</span>&nbsp; OnDeck</td></tr>'+
+  '<tr><td style="padding:32px 28px 28px;">'+
+  '<div style="margin-bottom:14px;color:#327451;font-size:11px;font-weight:700;letter-spacing:1px;">SECURE VERIFICATION</div>'+
+  '<h1 style="font-size:24px;line-height:1.25;margin:0 0 11px;color:#1a3034;font-weight:700;letter-spacing:-.5px;">'+escapeEmailHtml(title)+'</h1>'+
+  '<p style="font-size:14px;line-height:1.65;color:#708178;margin:0 0 25px;">'+escapeEmailHtml(intro)+'</p>'+
+  '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:11px;border:1px solid #c5e6d0;background:#eafbf0;border-collapse:separate;">'+
+  '<tr><td align="center" style="padding:21px 10px 7px;color:#5d8a6c;font-size:10px;font-weight:700;letter-spacing:1.5px;">YOUR 6-DIGIT CODE</td></tr>'+
+  '<tr><td align="center" style="padding:0 8px 15px;color:#171b2a;font-size:38px;font-weight:750;line-height:1.3;font-family:Arial,Helvetica,sans-serif;letter-spacing:7px;white-space:nowrap;">'+escapeEmailHtml(code)+'</td></tr>'+
+  '</table>'+
+  '<p style="text-align:center;color:#4d6658;font-size:12px;line-height:1.5;margin:15px 0 24px;">This code expires in <strong style="color:#294f39;">10 minutes</strong>.</p>'+
+  '<div style="border-top:1px solid #e8eee9;padding-top:18px;">'+
+  '<p style="color:#839187;font-size:12px;line-height:1.7;margin:0;">Didn’t request this code? You can safely ignore this email. Never share your code with anyone.</p>'+
+  '</div></td></tr>'+
+  '<tr><td style="padding:16px 28px;background:#f8faf7;font-size:11px;color:#91a097;">OnDeck &middot; Scheduling pages, made for you.</td></tr>'+
+  '</table></body></html>';
+ return {subject:'OnDeck · '+title,plain,html};
 }
 
 async function booking(token,data) {
@@ -351,7 +383,8 @@ async function requestCode(token,data,ip) {
   const code=String(crypto.randomInt(0,1000000)).padStart(6,'0');
   const key='wp:otp:'+who.key;
   await redis([['SET',key,sha(who.key+':'+code),'EX',600],['DEL','wp:attempts:'+who.key]]);
-  await mail(token,matches[0].email,'Your booking verification code','Your code is '+code+'. It expires in 10 minutes. If you did not request this, ignore this message.');
+  const verification=verificationEmail(code,'parent');
+  await mail(token,matches[0].email,verification.subject,verification.plain,verification.html);
  }
  return {message:'If a booking exists, a code was sent to its email.'};
 }
