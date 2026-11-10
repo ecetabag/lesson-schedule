@@ -27,6 +27,17 @@ This project is a reusable scheduling foundation; **Waterpolo Lesson Schedule** 
 
 No payments, and do **not** put secrets, refresh tokens, or contact details in public GitHub files.
 
+## Automated emails & waitlist (enabled in code)
+
+- **Client reminders:** Every morning a Vercel Cron job scans `Bookings` and emails a reminder for confirmed appointments happening **the following day**. Redis suppresses duplicate reminders for the same appointment and date. Calendar invitations are also sent when customers first book.
+- **Provider availability prompts:** On **Mondays**, approved providers in `COACH_EMAILS` receive a prompt to open the provider dashboard if they have **no OPEN teaching window in the next 14 days**. Redis deduplicates prompts for six days.
+- **Opt-in waitlist:** Customers can join the waitlist for a **chosen date** and 60- or 90-minute duration. An email is sent if a qualifying time becomes available, on the daily check or when a provider adds an available window. The notice does **not** reserve a time.
+- **Unsubscribe:** Each waitlist notification contains a unique opt-out link. The waitlist tracks `WAITING`, `NOTIFIED`, and `UNSUBSCRIBED` entries in a separate `Waitlist` Google Sheet tab, created by the API on first use.
+- **Scheduled endpoint:** `GET /api/cron` is called by Vercel at **15:00 UTC once per day** (`0 15 * * *`). It is protected by `CRON_SECRET`, a server-side secret that is not part of the public site.
+- **Optional configuration:** `PUBLIC_SITE_URL` defaults to `https://lesson-schedule-lake.vercel.app/`. Set it if the site moves to a new domain.
+
+**Operational notes:** A Vercel deployment being READY confirms the code was published; it does not verify that the first scheduled email succeeded. Check Vercel Function logs after the next scheduled run. Reminder email is sent from the authenticated Google account. Email delivery may be limited by Gmail API quotas. The basic waitlist is first-come-first-served and sends a single notification per request; it is not a hold or guaranteed reservation.
+
 ## Coach login and availability dashboard
 
 Coaches can use the **Coach login** button in the site header. The login is protected by a one-time six-digit email code, valid for 10 minutes. An authorized session lasts 8 hours and can be signed out. The site never stores the coach token permanently in the browser.
