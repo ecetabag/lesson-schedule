@@ -17,6 +17,12 @@ This project is a reusable scheduling foundation; **Waterpolo Lesson Schedule** 
 
 **Reusable use cases:** language tutoring, piano lessons, private fitness, swim coaching, consulting calls, hair or beauty appointments, photography sessions, rental appointments, and studio visits.
 
+## Session booking copy and optional notes
+
+For the Waterpolo instance, the homepage says **Book a Session** with **Water polo coaching · Private lessons** underneath. Configure `homeTitle` and `homeSubtitle` in `config.js` to change these independently of the app's browser title.
+
+The booking form includes an optional **Any notes?** textarea (500-character limit). The server validates this limit, saves the text in the `Bookings` sheet's **Notes** column O, and includes it in the Google Calendar event description (visible to calendar event participants). Existing bookings retain blank notes. Coaches can review notes in the Sheet or Calendar invitation.
+
 ## Architecture
 - Website: GitHub Pages (or deploy entire repo to Vercel).
 - API: `api/index.js` on Vercel, `/api/index` route; Node.js 20+.
