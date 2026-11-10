@@ -9,6 +9,7 @@ const ALLOWED_ORIGINS = new Set([ORIGIN, ...(process.env.ADDITIONAL_ORIGINS || '
 const DURATIONS = new Set([60, 90]);
 
 const COACH_GUEST_EMAIL = 'albertponfee@gmail.com';
+const BOOKING_ALERT_EMAIL = 'here@ecetabag.com';
 const COACH_PHONE = '5103567916';
 const COACH_MAP_LINK = 'https://maps.app.goo.gl/sH9GpLzf94pWavqj9?g_st=ic';
 const COACH_LOCATIONS = Object.freeze({
@@ -323,10 +324,12 @@ async function booking(token,data) {
   const templates=bookingEmailTemplates({bookingId,kid,email,phone,notes,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location});
   const results=await Promise.allSettled([
     mail(token,email,templates.client.subject,templates.client.plain,templates.client.html),
-    mail(token,COACH_GUEST_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html)
+    mail(token,COACH_GUEST_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html),
+    mail(token,BOOKING_ALERT_EMAIL,templates.coach.subject,templates.coach.plain,templates.coach.html)
   ]);
   if(results[0].status==='rejected')console.error('Client booking email failed for',bookingId,results[0].reason?.message);
   if(results[1].status==='rejected')console.error('Coach booking email failed for',bookingId,results[1].reason?.message);
+  if(results[2].status==='rejected')console.error('Additional booking alert email failed for',bookingId,results[2].reason?.message);
   return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ,confirmationEmailSent:results[0].status==='fulfilled',coachEmailSent:results[1].status==='fulfilled'};
  });
 }
