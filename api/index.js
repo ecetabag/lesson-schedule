@@ -7,6 +7,26 @@ const TZ = process.env.LESSON_TIMEZONE || 'America/Los_Angeles';
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ecetabag.github.io';
 const ALLOWED_ORIGINS = new Set([ORIGIN, ...(process.env.ADDITIONAL_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)]);
 const DURATIONS = new Set([60, 90]);
+
+const COACH_GUEST_EMAIL = 'albertponfee@gmail.com';
+const COACH_PHONE = '5103567916';
+const COACH_MAP_LINK = 'https://maps.app.goo.gl/sH9GpLzf94pWavqj9?g_st=ic';
+const COACH_LOCATIONS = Object.freeze({
+  'tam-high': 'Tamalpais High School, 700 Miller Avenue, Mill Valley, CA 94941',
+  'terra-linda-high': 'Terra Linda High School, 320 Nova Albion Way, San Rafael, CA 94903'
+});
+function directionsFor(location) {
+  const address=String(location||'').trim();
+  if(!address || address==='Pool')return COACH_MAP_LINK;
+  return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(address);
+}
+function eventDetails(bookingId,notes,location) {
+  return 'Booking ID: '+bookingId+
+   (notes?'\n\nNotes for coach:\n'+notes:'')+
+   '\n\nDirections to the lesson: '+directionsFor(location)+
+   '\nAdditional directions provided by coach: '+COACH_MAP_LINK;
+}
+
 const BOOKINGS = "'Bookings'!A2:N";
 const isSameOrigin = (origin,req) => { try { const u=new URL(origin);return u.protocol==='https:' && u.host===req.headers.host; }catch{return false;} };
 const WINDOWS = "'Slots'!A2:G";
@@ -135,10 +155,10 @@ async function coachAvailability(token,data) {
 }
 async function coachAddWindow(token,data) {
  const coach=await assertCoach(data);
- const day=clean(data.date),start=clean(data.start),end=clean(data.end),location=clean(data.location)||'Pool';
+ const day=clean(data.date),start=clean(data.start),end=clean(data.end),location=COACH_LOCATIONS[clean(data.location)];
  if(!validDay(day)||!validClock(start)||!validClock(end))throw fail(400,'Choose a valid date and time.');
  if(minutes(end)<=minutes(start)||minutes(end)-minutes(start)<60||minutes(end)-minutes(start)>720)throw fail(400,'Teaching windows must be between 1 and 12 hours.');
- if(location.length>120)throw fail(400,'Location is too long.');
+ if(!location)throw fail(400,'Choose Tam High or Terra Linda High School.');
  if(instant(day,start).getTime()<=Date.now())throw fail(400,'Choose a future availability window.');
  if(instant(day,start).getTime()>Date.now()+120*86400000)throw fail(400,'Availability may be added up to 120 days ahead.');
  return lockDay(day,async()=>{
@@ -203,13 +223,13 @@ async function booking(token,data) {
   if(!slot)throw fail(409,'That lesson time is no longer available.');
   const bookingId=crypto.randomUUID().replaceAll('-',''),eventId=bookingId;
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  const event={id:eventId,summary:APP_TITLE+' — '+kid,location:slot.location,description:'Booking ID: '+bookingId+(notes?'\n\nNotes for coach:\n'+notes:''), start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[{email}]};
+  const event={id:eventId,summary:'Waterpolo Lesson',location:slot.location,description:eventDetails(bookingId,notes,slot.location),start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},attendees:[...new Set([email,COACH_GUEST_EMAIL])].map(address=>({email:address}))};
   await google(token,'POST',calendarPath(),event,{sendUpdates:'all'});
   try{
    const values=[[bookingId,new Date().toISOString(),slot.windowId,slot.date,slot.start,slot.end,safe(kid),email,safe(phone),safe(slot.location),eventId,'CONFIRMED',new Date().toISOString(),duration,safe(notes)]];
    await sheets(token,'POST',"'Bookings'!A:O",{values},{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
   }catch(e){await google(token,'DELETE',calendarPath()+'/'+eventId).catch(()=>{});throw e;}
-  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,timezone:TZ};
+  return {bookingId,date:slot.date,start:slot.start,end:slot.end,duration,location:slot.location,directionsUrl:directionsFor(slot.location),timezone:TZ};
  });
 }
 async function findBookings(token,phone,kid) {
@@ -274,7 +294,7 @@ async function reschedule(token,data){
   if(!slot)throw fail(409,'That time is no longer available.');
   const before=await google(token,'GET',calendarPath()+'/'+encodeURIComponent(current.event));
   const start=instant(slot.date,slot.start),end=instant(slot.date,slot.end);
-  await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},location:slot.location},{sendUpdates:'all'});
+  await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:{dateTime:start.toISOString(),timeZone:TZ},end:{dateTime:end.toISOString(),timeZone:TZ},location:slot.location,summary:'Waterpolo Lesson',description:eventDetails(current.id,(before.description||'').split('Notes for coach:\n')[1]?.split('\n\nDirections to the lesson:')[0]||'',slot.location),attendees:[...new Set([...(before.attendees||[]).map(a=>a.email).filter(Boolean),COACH_GUEST_EMAIL])].map(address=>({email:address}))},{sendUpdates:'all'});
   try{
    await google(token,'POST','spreadsheets/'+encodeURIComponent(SHEET_ID)+'/values:batchUpdate',{
     valueInputOption:'RAW',
@@ -285,7 +305,7 @@ async function reschedule(token,data){
     ]
    });
   }catch(e){
-   await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:before.start,end:before.end,location:before.location},{sendUpdates:'all'}).catch(()=>{});
+   await google(token,'PATCH',calendarPath()+'/'+encodeURIComponent(current.event),{start:before.start,end:before.end,location:before.location,summary:before.summary,description:before.description,attendees:before.attendees},{sendUpdates:'all'}).catch(()=>{});
    throw e;
   }
   return {booking:{bookingId:current.id,date:slot.date,start:slot.start,end:slot.end,duration:current.duration}};
