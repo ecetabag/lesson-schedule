@@ -195,6 +195,56 @@ footer .footer-sep{color:#a1b2a8}
  margin:0;
 }
 
+
+/* OnDeck gold + midnight navy actions, keeping the original light layout. */
+:root{
+ --ondeck-navy:#171b2a;
+ --ondeck-navy-hover:#272d43;
+ --ondeck-gold:#ffe07c;
+ --ondeck-gold-hover:#f5d369;
+ --ondeck-gold-soft:#fff7dc;
+}
+.action,.modal-confirm{
+ background:var(--ondeck-navy);
+ color:#fff;
+ border-color:var(--ondeck-navy);
+}
+.action:hover:not(:disabled),.modal-confirm:hover:not(:disabled){background:var(--ondeck-navy-hover)}
+.waitlist-toggle{
+ background:var(--ondeck-gold);
+ border-color:#c9a84d;
+ color:var(--ondeck-navy);
+}
+.waitlist-toggle:hover,.waitlist-toggle[aria-expanded="true"]{
+ background:var(--ondeck-gold-hover);
+ border-color:#b8983f;
+}
+.waitlist-toggle:focus-visible,button:focus-visible{outline:3px solid #e8c357;outline-offset:3px}
+.coach-link{color:var(--ondeck-navy);border-color:#c9bd96;background:var(--ondeck-gold-soft)}
+.coach-link:hover{background:var(--ondeck-gold);border-color:#c9a84d}
+.home-actions .choice:hover,.home-actions .choice:focus-visible{border-color:#d4b458;background:var(--ondeck-gold-soft)}
+.home-actions .choice:hover .arrow{color:var(--ondeck-navy)}
+.duration[aria-pressed="true"]{
+ border-color:#c9a84d;
+ background:var(--ondeck-gold-soft);
+ box-shadow:inset 0 0 0 1px #d9bb5f;
+ color:var(--ondeck-navy);
+}
+.day.available{background:var(--ondeck-gold-soft);border-color:#d6be79;color:var(--ondeck-navy)}
+.day.available:hover{background:#ffedb3}
+.day.available::after{background:#c29526}
+.day.active,.day.active.available{background:var(--ondeck-navy);border-color:var(--ondeck-navy);color:var(--ondeck-gold)}
+.day.active::after{background:var(--ondeck-gold)}
+.legend-open{background:var(--ondeck-gold-soft);border-color:#d6be79}
+.legend-selected{background:var(--ondeck-navy)}
+.time[aria-pressed="true"],.times-sidebar .time[aria-pressed="true"]{
+ background:var(--ondeck-navy);border-color:var(--ondeck-navy);color:var(--ondeck-gold);
+}
+.times-sidebar .time:hover{border-color:#c9a84d;background:var(--ondeck-gold-soft)}
+.times-sidebar .time[aria-pressed="true"]:hover{background:var(--ondeck-navy);color:var(--ondeck-gold)}
+.modal-cancel:hover{background:var(--ondeck-gold-soft)}
+.modal-icon{background:var(--ondeck-gold-soft);border-color:#e9d8a8;color:var(--ondeck-navy)}
+
 </style>
 </head>
 <body>
